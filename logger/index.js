@@ -1,29 +1,34 @@
-const winston = require("winston");
-const DailyRotateFile = require("winston-daily-rotate-file");
-const logFormat = winston.format.combine(
-                          winston.format.colorize(),
-                          winston.format.timestamp(),
-                          winston.format.align(),
-                          winston.format.printf( info => `${info.timestamp}::${info.message}`,),
-                );
-const transport = new DailyRotateFile({ 
-            filename: "logs/serverss-%DATE%.log",
-            datePattern: "YYYY-MM-DD",
-            zippedArchive: true,
-            maxSize: "20m",
-            maxFiles: "14d",
-            prepend: true,
-            level:"info",
-});
-transport.on("rotate", function (oldFilename, newFilename) {
-});
+const winston = require('winston');
+require('winston-daily-rotate-file');
+
+const transports = [];
+
+// Console logger for all environments
+transports.push(new winston.transports.Console());
+
+if (process.env.VERCEL !== '1') {
+        // Only add file logger if NOT running on Vercel
+        const DailyRotateFile = require('winston-daily-rotate-file');
+        transports.push(
+                new DailyRotateFile({
+                        filename: 'logs/app-%DATE%.log',
+                        datePattern: 'YYYY-MM-DD',
+                        zippedArchive: false,
+                        maxSize: '20m',
+                        maxFiles: '14d',
+                })
+        );
+}
 
 const logger = winston.createLogger({
-        format: logFormat,
-        transports: [
-                transport,
-                new winston.transports.Console({level: "info",}),
-        ]
+        level: 'info',
+        format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.printf(
+                        ({ timestamp, level, message }) => `${timestamp} [${level.toUpperCase()}]: ${message}`
+                )
+        ),
+        transports
 });
 
-module.exports = logger
+module.exports = logger;
