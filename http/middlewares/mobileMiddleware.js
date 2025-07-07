@@ -22,7 +22,7 @@ const mobileMiddleware = async (req, res, next) => {
       // if (TechnicianData.isVerified != 1) return sendErrorResponse(401, res, "User not verified yet! please, verify first.")
       if (TechnicianData.authToken != authToken) return sendErrorResponse(401, res, "Invalid token")
       
-      req.user = TechnicianData.dataValues;
+      req.user = TechnicianData;
       const middlewareEndTime = moment().format("YYYY-MM-DDTHH:mm:ss.SSS");
       // req.user.middlewareExecTime = moment(middlewareEndTime).diff(moment(middlewareStartTime));
       next();

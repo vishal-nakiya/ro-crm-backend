@@ -5,10 +5,14 @@ const connectDB = require('../config/db');
 const Routes = require('../Routes/index');
 const logger = require('../logger/index');
 const moment = require('moment');
+const cookieParser = require("cookie-parser");
+// const swaggerUi = require('swagger-ui-express');
+// const swaggerSpecs = require('../config/swagger');
 
 dotenv.config();
 
 const app = express();
+app.use(cookieParser());
 
 // Connect to MongoDB on cold start
 connectDB().catch((err) => {
@@ -16,6 +20,29 @@ connectDB().catch((err) => {
 });
 
 app.use(express.json());
+
+// // Swagger UI setup
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
+//     customCss: '.swagger-ui .topbar { display: none }',
+//     customSiteTitle: 'RO CRM Backend API Documentation',
+//     customfavIcon: '/favicon.ico',
+//     swaggerOptions: {
+//         docExpansion: 'list',
+//         filter: true,
+//         showRequestHeaders: true,
+//         showCommonExtensions: true
+//     }
+// }));
+
+// // Health check endpoint
+// app.get('/health', (req, res) => {
+//     res.status(200).json({
+//         status: 'OK',
+//         message: 'RO CRM Backend is running',
+//         timestamp: new Date().toISOString(),
+//         version: '1.0.0'
+//     });
+// });
 
 app.use((error, req, res, next) => {
     res.status(500).send("Could not perform the action");
@@ -36,5 +63,9 @@ app.use(async (req, res, next) => {
 app.use('/', Routes);
 
 // ✅ Export the handler for Vercel
-module.exports = app;
-module.exports.handler = serverless(app);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`📚 API Documentation available at: http://localhost:${PORT}/api-docs`);
+});
+

@@ -1,10 +1,8 @@
 require("dotenv").config();
 const logError = require("../../logger/log");
 const { validationResult } = require("express-validator");
-const { sendSuccessResponse, sendErrorResponse, handleServerError, generateOTP } = require("../../helpers/helperFunc");
-const Technician = require("../../Models/Technician"); // ✅ import the correct model
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { sendSuccessResponse, sendErrorResponse, handleServerError, generateServices } = require("../../helpers/helperFunc");
+const Customer = require("../../Models/Customer"); // ✅ import the correct model
 
 const customersController = () => {
   return {
@@ -21,10 +19,21 @@ const customersController = () => {
           category,
           numberOfServices,
           remark,
-          technicianId
+          status
         } = req.body;
 
-        const newCustomer = new Customer({
+        const technicianId = req.user._id;
+
+        // Validate status field
+        const validStatuses = ['ACTIVE', 'OFFLINE'];
+        if (!status) {
+          return sendErrorResponse(400, res, "Status is required");
+        }
+        if (!validStatuses.includes(status)) {
+          return sendErrorResponse(400, res, "Invalid status. Must be one of: " + validStatuses.join(', '));
+        }
+
+        const customer = await Customer.create({
           fullName,
           contactNumber,
           address,
@@ -35,29 +44,16 @@ const customersController = () => {
           category,
           numberOfServices,
           remark,
+          status,
           technicianId
         });
 
-        await newCustomer.save();
+        const serviceIds = await generateServices(customer._id, numberOfServices, category, technicianId);
 
-        // Auto-generate service entries
-        let services = [];
-        for (let i = 1; i <= numberOfServices; i++) {
-          const service = new Service({
-            customerId: newCustomer._id,
-            serviceNumber: i,
-            category,
-            technicianId
-          });
-          await service.save();
-          services.push(service._id);
-        }
+        customer.services = serviceIds;
+        await customer.save();
 
-        // Save service references in customer
-        newCustomer.services = services;
-        await newCustomer.save();
-
-        sendSuccessResponse(201, res, 'Customer created', newCustomer, 1); // Send success response     ({ success: true, message: 'Customer created', data: newCustomer });
+        sendSuccessResponse(201, res, 'Customer created', customer); // Send success response     ({ success: true, message: 'Customer created', data: newCustomer });
       } catch (error) {
         console.log(error);
         logError(error, req);
@@ -69,13 +65,21 @@ const customersController = () => {
     getCustomers: async (req, res) => {
       try {
         const status = req.query.status;
+        // Validate status field
+        const validStatuses = ['ACTIVE', 'OFFLINE'];
+        if (!status) {
+          return sendErrorResponse(400, res, "Status is required");
+        }
+        if (!validStatuses.includes(status)) {
+          return sendErrorResponse(400, res, "Invalid status. Must be one of: " + validStatuses.join(', '));
+        }
         const customers = await Customer.find(status ? { status } : {})
           .populate('services')
           .sort({ createdAt: -1 });
-        res.json({ success: true, data: customers });
+        sendSuccessResponse(200, res, 'Customers fetched successfully', customers, customers.length);
       } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        handleServerError(res, error);
       }
     },
 
@@ -83,12 +87,13 @@ const customersController = () => {
     updateCustomer: async (req, res) => {
       try {
         const { id } = req.params;
+
         const updated = await Customer.findByIdAndUpdate(id, req.body, { new: true });
-        if (!updated) return res.status(404).json({ message: 'Customer not found' });
-        res.json({ success: true, data: updated });
+        if (!updated) return sendErrorResponse(404, res, "Customer not found");
+        sendSuccessResponse(200, res, "Customer updated successfully", updated);
       } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        handleServerError(res, error);
       }
     },
 
@@ -97,11 +102,22 @@ const customersController = () => {
       try {
         const { id } = req.params;
         const { status } = req.body;
+
+        // Validate status field
+        const validStatuses = ['ACTIVE', 'OFFLINE'];
+        if (!status) {
+          return sendErrorResponse(400, res, "Status is required");
+        }
+        if (!validStatuses.includes(status)) {
+          return sendErrorResponse(400, res, "Invalid status. Must be one of: " + validStatuses.join(', '));
+        }
+
         const updated = await Customer.findByIdAndUpdate(id, { status }, { new: true });
-        res.json({ success: true, data: updated });
+        if (!updated) return sendErrorResponse(404, res, "Customer not found");
+        sendSuccessResponse(200, res, "Customer status updated successfully", updated);
       } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        handleServerError(res, error);
       }
     },
 
@@ -110,10 +126,11 @@ const customersController = () => {
       try {
         const { id } = req.params;
         const deleted = await Customer.findByIdAndDelete(id);
-        res.json({ success: true, message: 'Customer deleted' });
+        if (!deleted) return sendErrorResponse(404, res, "Customer not found");
+        sendSuccessResponse(200, res, "Customer deleted successfully");
       } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        handleServerError(res, error);
       }
     },
 
@@ -122,11 +139,11 @@ const customersController = () => {
       try {
         const { id } = req.params;
         const customer = await Customer.findById(id).populate('services');
-        if (!customer) return res.status(404).json({ message: 'Customer not found' });
-        res.json({ success: true, data: customer });
+        if (!customer) return sendErrorResponse(404, res, "Customer not found");
+        sendSuccessResponse(200, res, "Customer fetched successfully", customer);
       } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        handleServerError(res, error);
       }
     }
   };
