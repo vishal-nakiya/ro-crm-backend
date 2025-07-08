@@ -6,8 +6,7 @@ const Routes = require('../Routes/index');
 const logger = require('../logger/index');
 const moment = require('moment');
 const cookieParser = require("cookie-parser");
-// const swaggerUi = require('swagger-ui-express');
-// const swaggerSpecs = require('../config/swagger');
+const { setupSwagger } = require('../swagger/merge-swagger');
 
 dotenv.config();
 
@@ -21,28 +20,18 @@ connectDB().catch((err) => {
 
 app.use(express.json());
 
-// // Swagger UI setup
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
-//     customCss: '.swagger-ui .topbar { display: none }',
-//     customSiteTitle: 'RO CRM Backend API Documentation',
-//     customfavIcon: '/favicon.ico',
-//     swaggerOptions: {
-//         docExpansion: 'list',
-//         filter: true,
-//         showRequestHeaders: true,
-//         showCommonExtensions: true
-//     }
-// }));
+// Setup Swagger documentation
+setupSwagger(app);
 
-// // Health check endpoint
-// app.get('/health', (req, res) => {
-//     res.status(200).json({
-//         status: 'OK',
-//         message: 'RO CRM Backend is running',
-//         timestamp: new Date().toISOString(),
-//         version: '1.0.0'
-//     });
-// });
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        message: 'RO CRM Backend is running',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0'
+    });
+});
 
 app.use((error, req, res, next) => {
     res.status(500).send("Could not perform the action");

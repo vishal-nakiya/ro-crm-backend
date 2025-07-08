@@ -1,0 +1,336 @@
+paths:
+  /bill/create:
+    post:
+      summary: Create a new bill
+      tags: [Bills]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customerId
+                - items
+              properties:
+                customerId:
+                  type: string
+                  description: Customer ID
+                  example: "507f1f77bcf86cd799439011"
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - description
+                      - amount
+                    properties:
+                      description:
+                        type: string
+                        description: Item description
+                        example: "Oil Change Service"
+                      amount:
+                        type: number
+                        minimum: 0.01
+                        description: Item amount
+                        example: 50.00
+                paymentMethod:
+                  type: string
+                  enum: [CASH, CARD, UPI, BANK_TRANSFER]
+                  description: Payment method
+                  example: "CASH"
+                notes:
+                  type: string
+                  description: Additional notes
+                  example: "Customer requested premium oil"
+      responses:
+        "201":
+          description: Bill created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Bill created successfully"
+                  data:
+                    $ref: "#/components/schemas/Bill"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /bill/getAll:
+    get:
+      summary: Get all bills for technician
+      tags: [Bills]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        "200":
+          description: Bills retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Bills retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Bill"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /bill/getByCustomer/{id}:
+    get:
+      summary: Get bills for a specific customer
+      tags: [Bills]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: Customer bills retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Customer bills retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Bill"
+        "400":
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /bill/getOne/{id}:
+    get:
+      summary: Get single bill by ID
+      tags: [Bills]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: Bill retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Bill retrieved successfully"
+                  data:
+                    $ref: "#/components/schemas/Bill"
+        "400":
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Bill not found
+        "500":
+          description: Internal server error
+
+  /bill/{id}/status:
+    patch:
+      summary: Update bill status
+      tags: [Bills]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, PAID, CANCELLED]
+                  description: Bill status
+                  example: "PAID"
+                paymentMethod:
+                  type: string
+                  enum: [CASH, CARD, UPI, BANK_TRANSFER]
+                  description: Payment method
+                  example: "CARD"
+                notes:
+                  type: string
+                  description: Additional notes
+                  example: "Payment received via credit card"
+      responses:
+        "200":
+          description: Bill status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Bill status updated successfully"
+                  data:
+                    $ref: "#/components/schemas/Bill"
+        "400":
+          description: Bad request - invalid ID or status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Bill not found
+        "500":
+          description: Internal server error
+
+  /bill/pdf:
+    get:
+      summary: Generate PDF for a bill
+      tags: [Bills]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: billId
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad request - invalid bill ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Bill not found
+        "500":
+          description: Internal server error
+
+  /bill/{id}:
+    delete:
+      summary: Delete bill (soft delete)
+      tags: [Bills]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: Bill deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Bill deleted successfully"
+        "400":
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Bill not found
+        "500":
+          description: Internal server error

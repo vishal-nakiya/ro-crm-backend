@@ -1,0 +1,347 @@
+paths:
+  /customer/create:
+    post:
+      summary: Create a new customer
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - phone
+              properties:
+                name:
+                  type: string
+                  description: Customer name
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  description: Customer email
+                  example: "john.doe@example.com"
+                phone:
+                  type: string
+                  description: Customer phone number
+                  example: "+1234567890"
+                address:
+                  type: string
+                  description: Customer address
+                  example: "123 Main St, City, State"
+                status:
+                  type: string
+                  enum: [active, inactive]
+                  default: active
+                  description: Customer status
+      responses:
+        "201":
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Customer created successfully"
+                  data:
+                    $ref: "#/components/schemas/Customer"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /customer/getbystatus:
+    get:
+      summary: Get customers by status
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, inactive, all]
+          description: Filter customers by status
+          example: active
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number for pagination
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of customers per page
+          example: 10
+      responses:
+        "200":
+          description: List of customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Customers retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Customer"
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /customer/update/{id}:
+    put:
+      summary: Update customer information
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Customer name
+                  example: "John Doe Updated"
+                email:
+                  type: string
+                  format: email
+                  description: Customer email
+                  example: "john.updated@example.com"
+                phone:
+                  type: string
+                  description: Customer phone number
+                  example: "+1234567890"
+                address:
+                  type: string
+                  description: Customer address
+                  example: "456 Updated St, City, State"
+                status:
+                  type: string
+                  enum: [active, inactive]
+                  description: Customer status
+      responses:
+        "200":
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Customer updated successfully"
+                  data:
+                    $ref: "#/components/schemas/Customer"
+        "400":
+          description: Bad request - invalid ID or validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Customer not found
+        "500":
+          description: Internal server error
+
+  /customer/status/{id}:
+    put:
+      summary: Update customer status
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [active, inactive]
+                  description: New customer status
+                  example: inactive
+      responses:
+        "200":
+          description: Customer status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Customer status updated successfully"
+                  data:
+                    $ref: "#/components/schemas/Customer"
+        "400":
+          description: Bad request - invalid ID or status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Customer not found
+        "500":
+          description: Internal server error
+
+  /customer/delete/{id}:
+    delete:
+      summary: Delete a customer
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: Customer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Customer deleted successfully"
+        "400":
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Customer not found
+        "500":
+          description: Internal server error
+
+  /customer/getOne/{id}:
+    get:
+      summary: Get customer by ID
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: Customer retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Customer retrieved successfully"
+                  data:
+                    $ref: "#/components/schemas/Customer"
+        "400":
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Customer not found
+        "500":
+          description: Internal server error

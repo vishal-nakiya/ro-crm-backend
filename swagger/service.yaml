@@ -1,0 +1,369 @@
+paths:
+  /service/getAll:
+    get:
+      summary: Get all services for technician
+      tags: [Services]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: month
+          schema:
+            type: string
+            enum: [current]
+          description: Filter by month (current month only)
+          example: current
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [AMC, NEW, PAID]
+          description: Filter by service category
+          example: AMC
+      responses:
+        "200":
+          description: Services retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Services fetched successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Service"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /service/complete:
+    post:
+      summary: Complete a service
+      tags: [Services]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - serviceId
+                - partsUsed
+              properties:
+                serviceId:
+                  type: string
+                  description: Service ID
+                  example: "507f1f77bcf86cd799439011"
+                partsUsed:
+                  type: object
+                  description: Parts used in the service
+                  example:
+                    "Oil Filter": 1
+                    "Engine Oil": 2
+      responses:
+        "200":
+          description: Service completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Service marked as completed"
+                  data:
+                    $ref: "#/components/schemas/Service"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Service not found
+        "500":
+          description: Internal server error
+
+  /service/reminder:
+    post:
+      summary: Add service reminder
+      tags: [Services]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - serviceId
+                - type
+                - date
+              properties:
+                serviceId:
+                  type: string
+                  description: Service ID
+                  example: "507f1f77bcf86cd799439011"
+                type:
+                  type: string
+                  enum: [TEXT, AUDIO]
+                  description: Reminder type
+                  example: "TEXT"
+                message:
+                  type: string
+                  description: Text message for TEXT type reminder
+                  example: "Service reminder for customer"
+                audioUrl:
+                  type: string
+                  description: Audio URL for AUDIO type reminder
+                  example: "https://example.com/audio.mp3"
+                date:
+                  type: string
+                  format: date-time
+                  description: Reminder date and time
+                  example: "2024-01-15T10:00:00Z"
+      responses:
+        "200":
+          description: Reminder added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Reminder added successfully"
+                  data:
+                    $ref: "#/components/schemas/Service"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Service not found
+        "500":
+          description: Internal server error
+
+  /service/batchtask:
+    post:
+      summary: Create batch task from services
+      tags: [Services]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - serviceIds
+              properties:
+                title:
+                  type: string
+                  description: Task title
+                  example: "Monthly Maintenance Batch"
+                serviceIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                  description: Array of service IDs
+                  example:
+                    ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+      responses:
+        "201":
+          description: Batch task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Task created and services assigned"
+                  data:
+                    $ref: "#/components/schemas/Task"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+components:
+  schemas:
+    Service:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Service ID
+          example: "507f1f77bcf86cd799439011"
+        customerId:
+          type: string
+          description: Customer ID
+          example: "507f1f77bcf86cd799439011"
+        serviceNumber:
+          type: number
+          description: Service number
+          example: 1001
+        category:
+          type: string
+          enum: [AMC, NEW, PAID]
+          description: Service category
+          example: "AMC"
+        status:
+          type: string
+          enum: [PENDING, COMPLETED]
+          description: Service status
+          example: "PENDING"
+        scheduledDate:
+          type: string
+          format: date-time
+          description: Scheduled date
+          example: "2024-01-15T10:00:00Z"
+        completedDate:
+          type: string
+          format: date-time
+          description: Completion date
+          example: "2024-01-15T12:00:00Z"
+        partsUsed:
+          type: array
+          items:
+            type: object
+            properties:
+              partName:
+                type: string
+                example: "Oil Filter"
+              quantity:
+                type: number
+                example: 1
+        technicianId:
+          type: string
+          description: Technician ID
+          example: "507f1f77bcf86cd799439011"
+        taskId:
+          type: string
+          description: Task ID
+          example: "507f1f77bcf86cd799439011"
+        reminders:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [TEXT, AUDIO]
+                example: "TEXT"
+              message:
+                type: string
+                example: "Service reminder"
+              audioUrl:
+                type: string
+                example: "https://example.com/audio.mp3"
+              date:
+                type: string
+                format: date-time
+                example: "2024-01-15T10:00:00Z"
+              entityType:
+                type: string
+                enum: [CUSTOMER, SERVICE]
+                example: "SERVICE"
+              entityId:
+                type: string
+                example: "507f1f77bcf86cd799439011"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T12:00:00Z"
+
+    Task:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Task ID
+          example: "507f1f77bcf86cd799439011"
+        title:
+          type: string
+          description: Task title
+          example: "Monthly Maintenance Batch"
+        technicianId:
+          type: string
+          description: Technician ID
+          example: "507f1f77bcf86cd799439011"
+        services:
+          type: array
+          items:
+            type: string
+          description: Array of service IDs
+          example: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+        sharedWith:
+          type: string
+          description: Shared technician ID
+          example: "507f1f77bcf86cd799439011"
+        status:
+          type: string
+          enum: [PENDING, COMPLETED]
+          description: Task status
+          example: "PENDING"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T12:00:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation error"
+        error:
+          type: string
+          example: "Invalid input data"

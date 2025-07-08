@@ -1,0 +1,1989 @@
+openapi: 3.0.0
+info:
+  title: RO CRM API
+  version: 1.0.0
+  description: API for RO CRM Backend
+servers:
+  - url: /api
+    description: API server
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+  schemas:
+    Customer:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Bill:
+      type: object
+      properties:
+        _id:
+          type: string
+        customerId:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              amount:
+                type: number
+        totalAmount:
+          type: number
+        status:
+          type: string
+          enum:
+            - PENDING
+            - PAID
+            - CANCELLED
+        paymentMethod:
+          type: string
+          enum:
+            - CASH
+            - CARD
+            - UPI
+            - BANK_TRANSFER
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Service:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Task:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        customerId:
+          type: string
+        technicianId:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELLED
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+            - URGENT
+        dueDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Technician:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        specialization:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error message
+paths:
+  /bill/create:
+    post:
+      summary: Create a new bill
+      tags:
+        - Bills
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customerId
+                - items
+              properties:
+                customerId:
+                  type: string
+                  description: Customer ID
+                  example: 507f1f77bcf86cd799439011
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - description
+                      - amount
+                    properties:
+                      description:
+                        type: string
+                        description: Item description
+                        example: Oil Change Service
+                      amount:
+                        type: number
+                        minimum: 0.01
+                        description: Item amount
+                        example: 50
+                paymentMethod:
+                  type: string
+                  enum:
+                    - CASH
+                    - CARD
+                    - UPI
+                    - BANK_TRANSFER
+                  description: Payment method
+                  example: CASH
+                notes:
+                  type: string
+                  description: Additional notes
+                  example: Customer requested premium oil
+      responses:
+        '201':
+          description: Bill created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Bill created successfully
+                  data:
+                    $ref: '#/components/schemas/Bill'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /bill/getAll:
+    get:
+      summary: Get all bills for technician
+      tags:
+        - Bills
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Bills retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Bills retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Bill'
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /bill/getByCustomer/{id}:
+    get:
+      summary: Get bills for a specific customer
+      tags:
+        - Bills
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Customer bills retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Customer bills retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Bill'
+        '400':
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /bill/getOne/{id}:
+    get:
+      summary: Get single bill by ID
+      tags:
+        - Bills
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Bill retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Bill retrieved successfully
+                  data:
+                    $ref: '#/components/schemas/Bill'
+        '400':
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Bill not found
+        '500':
+          description: Internal server error
+  /bill/{id}/status:
+    patch:
+      summary: Update bill status
+      tags:
+        - Bills
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - PENDING
+                    - PAID
+                    - CANCELLED
+                  description: Bill status
+                  example: PAID
+                paymentMethod:
+                  type: string
+                  enum:
+                    - CASH
+                    - CARD
+                    - UPI
+                    - BANK_TRANSFER
+                  description: Payment method
+                  example: CARD
+                notes:
+                  type: string
+                  description: Additional notes
+                  example: Payment received via credit card
+      responses:
+        '200':
+          description: Bill status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Bill status updated successfully
+                  data:
+                    $ref: '#/components/schemas/Bill'
+        '400':
+          description: Bad request - invalid ID or status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Bill not found
+        '500':
+          description: Internal server error
+  /bill/pdf:
+    get:
+      summary: Generate PDF for a bill
+      tags:
+        - Bills
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: billId
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad request - invalid bill ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Bill not found
+        '500':
+          description: Internal server error
+  /bill/{id}:
+    delete:
+      summary: Delete bill (soft delete)
+      tags:
+        - Bills
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Bill deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Bill deleted successfully
+        '400':
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Bill not found
+        '500':
+          description: Internal server error
+  /customer/create:
+    post:
+      summary: Create a new customer
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - phone
+              properties:
+                name:
+                  type: string
+                  description: Customer name
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  description: Customer email
+                  example: john.doe@example.com
+                phone:
+                  type: string
+                  description: Customer phone number
+                  example: '+1234567890'
+                address:
+                  type: string
+                  description: Customer address
+                  example: 123 Main St, City, State
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                  default: active
+                  description: Customer status
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Customer created successfully
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /customer/getbystatus:
+    get:
+      summary: Get customers by status
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - active
+              - inactive
+              - all
+          description: Filter customers by status
+          example: active
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number for pagination
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of customers per page
+          example: 10
+      responses:
+        '200':
+          description: List of customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Customers retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Customer'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /customer/update/{id}:
+    put:
+      summary: Update customer information
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Customer name
+                  example: John Doe Updated
+                email:
+                  type: string
+                  format: email
+                  description: Customer email
+                  example: john.updated@example.com
+                phone:
+                  type: string
+                  description: Customer phone number
+                  example: '+1234567890'
+                address:
+                  type: string
+                  description: Customer address
+                  example: 456 Updated St, City, State
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                  description: Customer status
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Customer updated successfully
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '400':
+          description: Bad request - invalid ID or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+  /customer/status/{id}:
+    put:
+      summary: Update customer status
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                  description: New customer status
+                  example: inactive
+      responses:
+        '200':
+          description: Customer status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Customer status updated successfully
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '400':
+          description: Bad request - invalid ID or status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+  /customer/delete/{id}:
+    delete:
+      summary: Delete a customer
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Customer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Customer deleted successfully
+        '400':
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+  /customer/getOne/{id}:
+    get:
+      summary: Get customer by ID
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Customer retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Customer retrieved successfully
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '400':
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+  /service/getAll:
+    get:
+      summary: Get all services for technician
+      tags:
+        - Services
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: month
+          schema:
+            type: string
+            enum:
+              - current
+          description: Filter by month (current month only)
+          example: current
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum:
+              - AMC
+              - NEW
+              - PAID
+          description: Filter by service category
+          example: AMC
+      responses:
+        '200':
+          description: Services retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Services fetched successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Service'
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /service/complete:
+    post:
+      summary: Complete a service
+      tags:
+        - Services
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - serviceId
+                - partsUsed
+              properties:
+                serviceId:
+                  type: string
+                  description: Service ID
+                  example: 507f1f77bcf86cd799439011
+                partsUsed:
+                  type: object
+                  description: Parts used in the service
+                  example:
+                    Oil Filter: 1
+                    Engine Oil: 2
+      responses:
+        '200':
+          description: Service completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Service marked as completed
+                  data:
+                    $ref: '#/components/schemas/Service'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Service not found
+        '500':
+          description: Internal server error
+  /service/reminder:
+    post:
+      summary: Add service reminder
+      tags:
+        - Services
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - serviceId
+                - type
+                - date
+              properties:
+                serviceId:
+                  type: string
+                  description: Service ID
+                  example: 507f1f77bcf86cd799439011
+                type:
+                  type: string
+                  enum:
+                    - TEXT
+                    - AUDIO
+                  description: Reminder type
+                  example: TEXT
+                message:
+                  type: string
+                  description: Text message for TEXT type reminder
+                  example: Service reminder for customer
+                audioUrl:
+                  type: string
+                  description: Audio URL for AUDIO type reminder
+                  example: https://example.com/audio.mp3
+                date:
+                  type: string
+                  format: date-time
+                  description: Reminder date and time
+                  example: '2024-01-15T10:00:00Z'
+      responses:
+        '200':
+          description: Reminder added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Reminder added successfully
+                  data:
+                    $ref: '#/components/schemas/Service'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Service not found
+        '500':
+          description: Internal server error
+  /service/batchtask:
+    post:
+      summary: Create batch task from services
+      tags:
+        - Services
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - serviceIds
+              properties:
+                title:
+                  type: string
+                  description: Task title
+                  example: Monthly Maintenance Batch
+                serviceIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                  description: Array of service IDs
+                  example:
+                    - 507f1f77bcf86cd799439011
+                    - 507f1f77bcf86cd799439012
+      responses:
+        '201':
+          description: Batch task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Task created and services assigned
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /task/getAll:
+    get:
+      summary: Get all tasks for technician
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - COMPLETED
+          description: Filter tasks by status
+          example: PENDING
+      responses:
+        '200':
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Tasks fetched successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /task/getOne/{id}:
+    get:
+      summary: Get single task by ID
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Task ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Task retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Task fetched successfully
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+  /task/sharetask:
+    post:
+      summary: Share task with another technician
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+                - phoneNumber
+              properties:
+                taskId:
+                  type: string
+                  description: Task ID
+                  example: 507f1f77bcf86cd799439011
+                phoneNumber:
+                  type: string
+                  description: Phone number of technician to share with
+                  example: '+1234567890'
+      responses:
+        '200':
+          description: Task shared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Task shared successfully
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Task or technician not found
+        '500':
+          description: Internal server error
+  /task/{id}/status:
+    patch:
+      summary: Update task status
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Task ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - PENDING
+                    - COMPLETED
+                  description: New task status
+                  example: COMPLETED
+      responses:
+        '200':
+          description: Task status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Task status updated successfully
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+  /task/{id}:
+    put:
+      summary: Update task details
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Task ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Task title
+                  example: Updated Task Title
+                sharedWith:
+                  type: string
+                  description: Technician ID to share with
+                  example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Task updated successfully
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete task
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Task ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Task deleted successfully
+        '400':
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+  /task/{id}/services:
+    post:
+      summary: Add services to task
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Task ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - serviceIds
+              properties:
+                serviceIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                  description: Array of service IDs to add
+                  example:
+                    - 507f1f77bcf86cd799439011
+                    - 507f1f77bcf86cd799439012
+      responses:
+        '200':
+          description: Services added to task successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Services added to task successfully
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Remove services from task
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Task ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - serviceIds
+              properties:
+                serviceIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                  description: Array of service IDs to remove
+                  example:
+                    - 507f1f77bcf86cd799439011
+                    - 507f1f77bcf86cd799439012
+      responses:
+        '200':
+          description: Services removed from task successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Services removed from task successfully
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+  /technician/register:
+    post:
+      summary: Register a new technician
+      tags:
+        - Technicians
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - contactNumber
+                - emailAddress
+                - accountPassword
+                - gender
+                - countryName
+                - stateName
+                - cityName
+                - countryCode
+                - address
+              properties:
+                fullName:
+                  type: string
+                  description: Full name of the technician
+                  example: John Doe
+                contactNumber:
+                  type: string
+                  pattern: ^[0-9]{10,15}$
+                  description: Contact number (10-15 digits)
+                  example: '1234567890'
+                emailAddress:
+                  type: string
+                  format: email
+                  description: Email address
+                  example: john.doe@example.com
+                accountPassword:
+                  type: string
+                  minLength: 6
+                  description: Account password (minimum 6 characters)
+                  example: password123
+                gender:
+                  type: string
+                  enum:
+                    - MALE
+                    - FEMALE
+                    - OTHER
+                  description: Gender
+                  example: MALE
+                dateOfBirth:
+                  type: string
+                  format: date
+                  description: Date of birth (optional)
+                  example: '1990-01-01'
+                countryName:
+                  type: string
+                  description: Country name
+                  example: United States
+                stateName:
+                  type: string
+                  description: State name
+                  example: California
+                cityName:
+                  type: string
+                  description: City name
+                  example: Los Angeles
+                postalCode:
+                  type: string
+                  pattern: ^([0-9]{4}|[0-9]{6})$
+                  description: Postal code (4 or 6 digits, optional)
+                  example: '12345'
+                countryCode:
+                  type: string
+                  pattern: ^\+[0-9]{1,4}$
+                  description: Country code in format +<digits>
+                  example: '+1'
+                companyName:
+                  type: string
+                  description: Company name (optional)
+                  example: Tech Solutions Inc
+                address:
+                  type: string
+                  description: Address
+                  example: 123 Main St, Los Angeles, CA
+      responses:
+        '200':
+          description: Technician registered successfully, OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: OTP has been sent to the provided mobile number and email.
+                  data:
+                    $ref: '#/components/schemas/Technician'
+        '409':
+          description: Technician already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /technician/login:
+    post:
+      summary: Technician login
+      tags:
+        - Technicians
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+                - accountPassword
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: '1234567890'
+                accountPassword:
+                  type: string
+                  description: Account password
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Welcome John Doe
+                  data:
+                    type: object
+                    properties:
+                      authToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      refreshToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      id:
+                        type: string
+                        example: 507f1f77bcf86cd799439011
+                      fullName:
+                        type: string
+                        example: John Doe
+                      contactNumber:
+                        type: string
+                        example: '1234567890'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /technician/logout:
+    post:
+      summary: Technician logout
+      tags:
+        - Technicians
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+                  description: Refresh token
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /technician/refreshToken:
+    post:
+      summary: Refresh access token
+      tags:
+        - Technicians
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh token
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  authToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /technician/forgot-password:
+    post:
+      summary: Forgot password - send OTP
+      tags:
+        - Technicians
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: '1234567890'
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: OTP sent to your mobile number
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /technician/reset-password:
+    post:
+      summary: Reset password with OTP
+      tags:
+        - Technicians
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+                - otp
+                - newPassword
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: '1234567890'
+                otp:
+                  type: string
+                  description: OTP received
+                  example: '123456'
+                newPassword:
+                  type: string
+                  minLength: 6
+                  description: New password (minimum 6 characters)
+                  example: newpassword123
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password reset successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /technician/verify-otp:
+    post:
+      summary: Verify OTP
+      tags:
+        - Technicians
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+                - otp
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: '1234567890'
+                otp:
+                  type: string
+                  description: OTP to verify
+                  example: '123456'
+      responses:
+        '200':
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: OTP verified successfully
+        '400':
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error

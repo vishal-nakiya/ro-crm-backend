@@ -1,0 +1,559 @@
+paths:
+  /technician/register:
+    post:
+      summary: Register a new technician
+      tags: [Technicians]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - contactNumber
+                - emailAddress
+                - accountPassword
+                - gender
+                - countryName
+                - stateName
+                - cityName
+                - countryCode
+                - address
+              properties:
+                fullName:
+                  type: string
+                  description: Full name of the technician
+                  example: "John Doe"
+                contactNumber:
+                  type: string
+                  pattern: "^[0-9]{10,15}$"
+                  description: Contact number (10-15 digits)
+                  example: "1234567890"
+                emailAddress:
+                  type: string
+                  format: email
+                  description: Email address
+                  example: "john.doe@example.com"
+                accountPassword:
+                  type: string
+                  minLength: 6
+                  description: Account password (minimum 6 characters)
+                  example: "password123"
+                gender:
+                  type: string
+                  enum: [MALE, FEMALE, OTHER]
+                  description: Gender
+                  example: "MALE"
+                dateOfBirth:
+                  type: string
+                  format: date
+                  description: Date of birth (optional)
+                  example: "1990-01-01"
+                countryName:
+                  type: string
+                  description: Country name
+                  example: "United States"
+                stateName:
+                  type: string
+                  description: State name
+                  example: "California"
+                cityName:
+                  type: string
+                  description: City name
+                  example: "Los Angeles"
+                postalCode:
+                  type: string
+                  pattern: "^([0-9]{4}|[0-9]{6})$"
+                  description: Postal code (4 or 6 digits, optional)
+                  example: "12345"
+                countryCode:
+                  type: string
+                  pattern: "^\\+[0-9]{1,4}$"
+                  description: Country code in format +<digits>
+                  example: "+1"
+                companyName:
+                  type: string
+                  description: Company name (optional)
+                  example: "Tech Solutions Inc"
+                address:
+                  type: string
+                  description: Address
+                  example: "123 Main St, Los Angeles, CA"
+      responses:
+        "200":
+          description: Technician registered successfully, OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "OTP has been sent to the provided mobile number and email."
+                  data:
+                    $ref: "#/components/schemas/Technician"
+        "409":
+          description: Technician already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+  /technician/login:
+    post:
+      summary: Technician login
+      tags: [Technicians]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+                - accountPassword
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: "1234567890"
+                accountPassword:
+                  type: string
+                  description: Account password
+                  example: "password123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Welcome John Doe"
+                  data:
+                    type: object
+                    properties:
+                      authToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      refreshToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      id:
+                        type: string
+                        example: "507f1f77bcf86cd799439011"
+                      fullName:
+                        type: string
+                        example: "John Doe"
+                      contactNumber:
+                        type: string
+                        example: "1234567890"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+  /technician/logout:
+    post:
+      summary: Technician logout
+      tags: [Technicians]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+                  description: Refresh token
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+  /technician/refreshToken:
+    post:
+      summary: Refresh access token
+      tags: [Technicians]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh token
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        "200":
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  authToken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+  /technician/forgot-password:
+    post:
+      summary: Forgot password - send OTP
+      tags: [Technicians]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: "1234567890"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "OTP sent to your mobile number"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+  /technician/reset-password:
+    post:
+      summary: Reset password with OTP
+      tags: [Technicians]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+                - otp
+                - newPassword
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: "1234567890"
+                otp:
+                  type: string
+                  description: OTP received
+                  example: "123456"
+                newPassword:
+                  type: string
+                  minLength: 6
+                  description: New password (minimum 6 characters)
+                  example: "newpassword123"
+      responses:
+        "200":
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Password reset successfully"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+  /technician/verify-otp:
+    post:
+      summary: Verify OTP
+      tags: [Technicians]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactNumber
+                - otp
+              properties:
+                contactNumber:
+                  type: string
+                  description: Contact number
+                  example: "1234567890"
+                otp:
+                  type: string
+                  description: OTP to verify
+                  example: "123456"
+      responses:
+        "200":
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "OTP verified successfully"
+        "400":
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+components:
+  schemas:
+    Technician:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Technician ID
+          example: "507f1f77bcf86cd799439011"
+        fullName:
+          type: string
+          description: Full name
+          example: "John Doe"
+        contactNumber:
+          type: string
+          description: Contact number
+          example: "1234567890"
+        emailAddress:
+          type: string
+          format: email
+          description: Email address
+          example: "john.doe@example.com"
+        accountPassword:
+          type: string
+          description: Hashed password
+          example: "$2a$10$hashedpassword..."
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          description: Gender
+          example: "MALE"
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth
+          example: "1990-01-01"
+        countryName:
+          type: string
+          description: Country name
+          example: "United States"
+        stateName:
+          type: string
+          description: State name
+          example: "California"
+        cityName:
+          type: string
+          description: City name
+          example: "Los Angeles"
+        postalCode:
+          type: string
+          description: Postal code
+          example: "12345"
+        countryCode:
+          type: string
+          description: Country code
+          example: "+1"
+        companyName:
+          type: string
+          description: Company name
+          example: "Tech Solutions Inc"
+        address:
+          type: string
+          description: Address
+          example: "123 Main St, Los Angeles, CA"
+        otp:
+          type: string
+          description: OTP for verification
+          example: "123456"
+        authToken:
+          type: string
+          description: Authentication token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        deletedAt:
+          type: string
+          format: date-time
+          description: Deletion timestamp
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-15T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-15T12:00:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation error"
+        error:
+          type: string
+          example: "Invalid input data"
