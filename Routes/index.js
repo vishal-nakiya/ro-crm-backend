@@ -18,8 +18,8 @@ Router.use('/api/customer', customerRoutes);
 Router.use('/api/bill', billRoutes);
 Router.use('/api/service', serviceRoutes);
 Router.use('/api/task', taskRoutes);
-Router.use('/api/otp', otpRoutes);
-Router.use('/api/notification', notificationRoutes);
+// Router.use('/api/otp', otpRoutes);
+// Router.use('/api/notification', notificationRoutes);
 
 // Test endpoint for debugging Firebase tokens
 Router.post('/test-token', async (req, res) => {
