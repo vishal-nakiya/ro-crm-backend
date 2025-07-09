@@ -4,8 +4,8 @@ const Router = express.Router();
 // Explicitly import all route modules
 const loginRoutes = require('./loginRoutes');
 const techniciansRoutes = require('./techniciansRoutes');
-const otpRoutes = require('./otpRoutes');
-const notificationRoutes = require('./notificationRoutes');
+// const otpRoutes = require('./otpRoutes');
+// const notificationRoutes = require('./notificationRoutes');
 const customerRoutes = require('./customerRoutes');
 const billRoutes = require('./billRoutes');
 const serviceRoutes = require('./serviceRoutes');
