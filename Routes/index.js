@@ -1,31 +1,75 @@
 const express = require('express');
 const Router = express.Router();
-const requireDirectory = require('require-directory');
 
-// Load all route modules in current directory
-const routes = requireDirectory(module, '.');
+// Explicitly import all route modules
+const loginRoutes = require('./loginRoutes');
+const techniciansRoutes = require('./techniciansRoutes');
+const otpRoutes = require('./otpRoutes');
+const notificationRoutes = require('./notificationRoutes');
+const customerRoutes = require('./customerRoutes');
+const billRoutes = require('./billRoutes');
+const serviceRoutes = require('./serviceRoutes');
+const taskRoutes = require('./taskRoutes');
 
-// Define route exclusions (optional)
-const EXCLUDE_ROUTES = ['loginRoutes', 'techniciansRoutes'];
+// Register all routes with their respective paths
+Router.use('/admin', loginRoutes);
+Router.use('/auth', techniciansRoutes);
+Router.use('/api/customer', customerRoutes);
+Router.use('/api/bill', billRoutes);
+Router.use('/api/service', serviceRoutes);
+Router.use('/api/task', taskRoutes);
+Router.use('/api/otp', otpRoutes);
+Router.use('/api/notification', notificationRoutes);
 
-// Dynamic loader
-for (const key in routes) {
-    if (!Object.prototype.hasOwnProperty.call(routes, key)) continue;
+// Test endpoint for debugging Firebase tokens
+Router.post('/test-token', async (req, res) => {
+    try {
+        const { firebaseToken } = req.body;
 
-    const routeFile = routes[key];
-    const fileName = key;
+        if (!firebaseToken) {
+            return res.status(400).json({
+                success: false,
+                message: 'Firebase token is required'
+            });
+        }
 
-    // Skip explicitly excluded routes
-    if (EXCLUDE_ROUTES.includes(fileName)) continue;
+        // Basic token validation
+        const { validateFirebaseToken } = require('../helpers/helperFunc');
+        const tokenValidation = validateFirebaseToken(firebaseToken);
 
-    // Remove 'Routes' suffix from URL path if present
-    const routeName = fileName.replace(/Routes$/, '').toLowerCase();
-    Router.use(`/api/${routeName}`, routeFile);
-}
+        if (!tokenValidation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token validation failed',
+                issues: tokenValidation.issues
+            });
+        }
 
-// Manually include excluded/special-case routes
-Router.use('/admin', require('./loginRoutes'));
-Router.use('/auth', require('./techniciansRoutes'));
+        // Try to verify the token
+        const admin = require('../config/firebase');
+        const decodedToken = await admin.auth().verifyIdToken(firebaseToken);
 
+        res.status(200).json({
+            success: true,
+            message: 'Token is valid',
+            tokenInfo: {
+                uid: decodedToken.uid,
+                email: decodedToken.email,
+                emailVerified: decodedToken.email_verified,
+                tokenLength: firebaseToken.length,
+                tokenType: 'Firebase ID Token'
+            }
+        });
+
+    } catch (error) {
+        console.log('Token test error:', error);
+        res.status(400).json({
+            success: false,
+            message: 'Token verification failed',
+            error: error.message,
+            code: error.code
+        });
+    }
+});
 
 module.exports = Router;
