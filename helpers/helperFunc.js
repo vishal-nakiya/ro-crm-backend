@@ -46,6 +46,33 @@ const helperObj = {
 
         const inserted = await Service.insertMany(serviceList);
         return inserted.map(s => s._id);
+    },
+    validateFirebaseToken: (token) => {
+        const issues = [];
+
+        if (!token) {
+            issues.push('Token is missing');
+            return { isValid: false, issues };
+        }
+
+        // Check if it's a JWT token (3 parts separated by dots)
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            issues.push('Token is not in JWT format (should have 3 parts separated by dots)');
+            return { isValid: false, issues };
+        }
+
+        // Check token length (Firebase ID tokens are typically 1000+ characters)
+        if (token.length < 100) {
+            issues.push('Token seems too short for a Firebase ID token');
+        }
+
+        // Check if it starts with typical Firebase token pattern
+        if (!token.startsWith('eyJ')) {
+            issues.push('Token does not start with expected Firebase ID token pattern');
+        }
+
+        return { isValid: issues.length === 0, issues };
     }
 }
 

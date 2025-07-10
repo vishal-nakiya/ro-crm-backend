@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
 
+const ReminderSchema = new mongoose.Schema({
+    type: { type: String, enum: ['TEXT', 'AUDIO'], required: true },
+    message: { type: String },
+    audioUrl: { type: String },
+    date: { type: Date, required: true },
+    entityType: { type: String, enum: ['CUSTOMER', 'SERVICE'], required: true },
+    entityId: { type: mongoose.Schema.Types.ObjectId, required: true },
+}, { _id: false });
+
 const customerSchema = new mongoose.Schema({
     fullName: { type: String, required: true },
     contactNumber: { type: String, required: true },
@@ -31,7 +40,7 @@ const customerSchema = new mongoose.Schema({
             ref: 'Service'
         }
     ],
-    // reminders: [ReminderSchema]
+    reminders: [ReminderSchema]
 }, {
     timestamps: true // adds createdAt and updatedAt
 });

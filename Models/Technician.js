@@ -18,6 +18,8 @@ const technicianSchema = new mongoose.Schema(
         otp: { type: String },
         authToken: { type: String },
         refreshToken: { type: String },
+        firebase_uid: { type: String, unique: true, sparse: true },
+        fcmToken: { type: String },
         deletedAt: { type: Date, default: null },
     },
     {

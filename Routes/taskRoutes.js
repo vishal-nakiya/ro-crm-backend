@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 // Middleware to check if the user is authenticated
 const mobileMiddleware = require("../http/middlewares/mobileMiddleware");
 const authMiddleware = require("../http/middlewares/authMiddleware");
+const firebaseAuthMiddleware = require("../http/middlewares/firebaseAuthMiddleware");
 
 // ObjectId validation middleware
 const validateObjectId = (req, res, next) => {
@@ -33,7 +34,7 @@ Router.post("/sharetask", mobileMiddleware, [
 ], taskController().shareTask);
 
 // Update task status
-Router.patch("/:id/status", mobileMiddleware, validateObjectId, [
+Router.patch("/updateTaskStatus/:id", mobileMiddleware, validateObjectId, [
     body('status').isIn(['PENDING', 'COMPLETED']).withMessage('Status must be PENDING or COMPLETED')
 ], taskController().updateTaskStatus);
 

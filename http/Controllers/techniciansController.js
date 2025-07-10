@@ -5,6 +5,7 @@ const { sendSuccessResponse, sendErrorResponse, handleServerError, generateOTP }
 const Technician = require("../../Models/Technician"); // ✅ import the correct model
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const admin = require("../../config/firebase");
 
 const techniciansController = () => {
   return {
@@ -41,7 +42,13 @@ const techniciansController = () => {
 
         const salt = await bcrypt.genSalt(10);
         const securedPassword = await bcrypt.hash(accountPassword, salt);
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+          return sendErrorResponse(401, res, "No Firebase token provided");
+        }
 
+        // ✅ Step 1: Verify Firebase ID token
+        const decoded = await admin.auth().verifyIdToken(token);
         const technicianData = {
           fullName,
           contactNumber,
@@ -56,7 +63,8 @@ const techniciansController = () => {
           countryCode,
           companyName: companyName?.trim(),
           address,
-          otp
+          otp,
+          firebase_uid: decoded.uid
         };
 
         const newTechnician = await Technician.create(technicianData);
@@ -139,6 +147,44 @@ const techniciansController = () => {
         return handleServerError(res);
       }
     },
+    // techniciansLogin: async (req, res) => {
+    //   try {
+    //     const token = req.headers.authorization?.split(' ')[1];
+    //     if (!token) {
+    //       return sendErrorResponse(401, res, "No Firebase token provided");
+    //     }
+
+    //     // ✅ Step 1: Verify Firebase ID token
+    //     const decoded = await admin.auth().verifyIdToken(token);
+    //     const phone = decoded.phone_number;
+
+    //     if (!phone) {
+    //       return sendErrorResponse(400, res, 'Phone number missing in Firebase token');
+    //     }
+
+    //     // ✅ Step 2: Lookup technician only (no auto-create)
+    //     const technician = await Technician.findOne({ contactNumber: phone, deletedAt: null });
+
+    //     if (!technician) {
+    //       return sendErrorResponse(404, res, 'Technician not registered. Contact admin.');
+    //     }
+
+    //     // ✅ Step 3: Respond with technician data
+    //     sendSuccessResponse(200, res, 'Login successful', {
+    //       success: true,
+    //       message: `Welcome ${technician.fullName}`,
+    //       data: {
+    //         id: technician._id,
+    //         fullName: technician.fullName,
+    //         contactNumber: technician.contactNumber
+    //       }
+    //     });
+
+    //   } catch (error) {
+    //     console.error('Firebase login error:', error);
+    //     return sendErrorResponse(500, res, 'Login failed', error);
+    //   }
+    // },
     techniciansRefreshToken: async (req, res) => {
       try {
         // Validate request body

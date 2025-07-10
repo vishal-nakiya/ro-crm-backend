@@ -163,6 +163,49 @@ components:
         updatedAt:
           type: string
           format: date-time
+    Complaint:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Complaint ID
+        customerId:
+          type: object
+          description: Customer information
+          properties:
+            _id:
+              type: string
+            fullName:
+              type: string
+            contactNumber:
+              type: string
+            address:
+              type: string
+        technicianId:
+          type: string
+          description: Technician ID
+        text:
+          type: string
+          description: Complaint text
+        status:
+          type: string
+          enum:
+            - OPEN
+            - CLOSED
+          description: Complaint status
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Soft delete timestamp
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
     ErrorResponse:
       type: object
       properties:
@@ -518,6 +561,355 @@ paths:
           description: Unauthorized - authentication required
         '404':
           description: Bill not found
+        '500':
+          description: Internal server error
+  /complaint/create:
+    post:
+      summary: Create a new complaint
+      tags:
+        - Complaints
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customerId
+                - text
+              properties:
+                customerId:
+                  type: string
+                  description: Customer ID (MongoDB ObjectId)
+                  example: 507f1f77bcf86cd799439011
+                text:
+                  type: string
+                  minLength: 10
+                  maxLength: 1000
+                  description: Complaint text
+                  example: The air conditioning unit is not cooling properly and making strange noises.
+      responses:
+        '201':
+          description: Complaint created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Complaint created successfully
+                  data:
+                    $ref: '#/components/schemas/Complaint'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Customer not found or not associated with technician
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /complaint/getall:
+    get:
+      summary: Get all complaints for the authenticated technician
+      tags:
+        - Complaints
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Complaints retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Complaints fetched successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Complaint'
+                  count:
+                    type: integer
+                    example: 5
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /complaint/getbystatus:
+    get:
+      summary: Get complaints by status
+      tags:
+        - Complaints
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: status
+          required: true
+          schema:
+            type: string
+            enum:
+              - OPEN
+              - CLOSED
+          description: Filter complaints by status
+          example: OPEN
+      responses:
+        '200':
+          description: Complaints retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Complaints fetched successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Complaint'
+                  count:
+                    type: integer
+                    example: 3
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+        '401':
+          description: Unauthorized - authentication required
+        '500':
+          description: Internal server error
+  /complaint/getOne/{id}:
+    get:
+      summary: Get a single complaint by ID
+      tags:
+        - Complaints
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Complaint ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Complaint retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Complaint fetched successfully
+                  data:
+                    $ref: '#/components/schemas/Complaint'
+        '400':
+          description: Bad request - invalid ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Complaint not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /complaint/status/{id}:
+    patch:
+      summary: Update complaint status
+      tags:
+        - Complaints
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Complaint ID
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - OPEN
+                    - CLOSED
+                  description: New status for the complaint
+                  example: CLOSED
+      responses:
+        '200':
+          description: Complaint status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Complaint status updated successfully
+                  data:
+                    $ref: '#/components/schemas/Complaint'
+        '400':
+          description: Bad request - validation error or invalid ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Complaint not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+  /complaint/delete/{id}:
+    delete:
+      summary: Delete complaint (soft delete)
+      tags:
+        - Complaints
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Complaint ID
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Complaint deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Complaint deleted successfully
+        '400':
+          description: Bad request - invalid ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+        '404':
+          description: Complaint not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
   /customer/create:

@@ -150,6 +150,48 @@ components:
           type: string
           format: date-time
 
+    Complaint:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Complaint ID
+        customerId:
+          type: object
+          description: Customer information
+          properties:
+            _id:
+              type: string
+            fullName:
+              type: string
+            contactNumber:
+              type: string
+            address:
+              type: string
+        technicianId:
+          type: string
+          description: Technician ID
+        text:
+          type: string
+          description: Complaint text
+        status:
+          type: string
+          enum: [OPEN, CLOSED]
+          description: Complaint status
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Soft delete timestamp
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
     ErrorResponse:
       type: object
       properties:
@@ -168,4 +210,5 @@ paths:
   # Service routes will be imported from service.yaml
   # Task routes will be imported from task.yaml
   # Technician routes will be imported from technician.yaml
+  # Complaint routes will be imported from complaint.yaml
   # Login routes will be imported from login.yaml
