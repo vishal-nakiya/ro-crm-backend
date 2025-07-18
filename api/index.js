@@ -53,8 +53,13 @@ app.use('/', Routes);
 
 // ✅ Export the handler for Vercel
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`📚 API Documentation available at: http://localhost:${PORT}/api-docs`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
+    });
+}
+
+module.exports.handler = serverless(app); // 👈 for Vercel to run it as a serverless function
 
