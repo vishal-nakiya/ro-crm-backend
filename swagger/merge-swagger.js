@@ -68,6 +68,7 @@ function setupSwagger(app) {
         console.log('Setting up Swagger UI with merged specification');
         console.log('Number of paths in merged spec:', Object.keys(mergedSwagger.paths || {}).length);
 
+        // Serve Swagger UI with better configuration for serverless
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(mergedSwagger, {
             explorer: true,
             customCss: '.swagger-ui .topbar { display: none }',
@@ -76,8 +77,21 @@ function setupSwagger(app) {
                 url: '/api-docs.yaml',
                 docExpansion: 'list',
                 filter: true,
-                showRequestHeaders: true
-            }
+                showRequestHeaders: true,
+                tryItOutEnabled: true,
+                requestInterceptor: (req) => {
+                    // Add CORS headers for serverless environment
+                    req.headers['Access-Control-Allow-Origin'] = '*';
+                    return req;
+                }
+            },
+            customJs: [
+                'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js'
+            ],
+            customCssUrl: [
+                'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css'
+            ]
         }));
 
         // Serve raw YAML file - generate on-the-fly instead of reading from disk
@@ -88,11 +102,22 @@ function setupSwagger(app) {
                     noRefs: true
                 });
                 res.setHeader('Content-Type', 'text/yaml');
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+                res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
                 res.send(mergedContent);
             } catch (error) {
                 console.error('Error serving YAML:', error.message);
                 res.status(500).send('Error generating API documentation');
             }
+        });
+
+        // Add CORS headers for all API docs routes
+        app.use('/api-docs', (req, res, next) => {
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            next();
         });
 
         console.log('Swagger UI setup completed successfully');
