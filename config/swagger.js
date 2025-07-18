@@ -22,7 +22,7 @@ const options = {
                 description: 'Development server'
             },
             {
-                url: 'https://your-production-domain.com',
+                url: 'https://ro-crm-backend.vercel.app',
                 description: 'Production server'
             }
         ],
