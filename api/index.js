@@ -60,6 +60,6 @@ if (process.env.NODE_ENV !== 'production') {
         console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
     });
 }
-
+module.exports = app;
 module.exports.handler = serverless(app); // 👈 for Vercel to run it as a serverless function
 
