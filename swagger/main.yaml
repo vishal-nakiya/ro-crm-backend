@@ -202,6 +202,28 @@ components:
           type: string
           example: "Error message"
 
+tags:
+  - name: Authentication
+    description: Login and authentication endpoints
+  - name: Customers
+    description: Customer management operations
+  - name: Services
+    description: Service management operations
+  - name: Tasks
+    description: Task management operations
+  - name: Bills
+    description: Bill management operations
+  - name: Technicians
+    description: Technician management operations
+  - name: Complaints
+    description: Complaint management operations
+  - name: OTP
+    description: OTP verification operations
+  - name: Notifications
+    description: Notification management operations
+  - name: Reminders
+    description: Reminder management operations
+
 # Import route-specific documentation
 # These will be merged with the main file
 paths:
@@ -212,3 +234,6 @@ paths:
   # Technician routes will be imported from technician.yaml
   # Complaint routes will be imported from complaint.yaml
   # Login routes will be imported from login.yaml
+  # OTP routes will be imported from otp.yaml
+  # Notification routes will be imported from notification.yaml
+  # Reminder routes will be imported from reminder.yaml

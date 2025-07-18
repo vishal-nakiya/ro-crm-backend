@@ -1,0 +1,173 @@
+paths:
+  /notification/send:
+    post:
+      summary: Send notification
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - message
+                - recipientId
+              properties:
+                title:
+                  type: string
+                  description: Notification title
+                  example: "Task Update"
+                message:
+                  type: string
+                  description: Notification message
+                  example: "Your task has been updated"
+                recipientId:
+                  type: string
+                  description: Recipient user ID
+                  example: "507f1f77bcf86cd799439011"
+                type:
+                  type: string
+                  enum: [info, warning, error, success]
+                  description: Notification type
+                  example: "info"
+      responses:
+        "200":
+          description: Notification sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Notification sent successfully"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /notification/getAll:
+    get:
+      summary: Get all notifications for user
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number for pagination
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of notifications per page
+          example: 10
+      responses:
+        "200":
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Notifications retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        title:
+                          type: string
+                        message:
+                          type: string
+                        type:
+                          type: string
+                        read:
+                          type: boolean
+                        createdAt:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /notification/markAsRead/{id}:
+    put:
+      summary: Mark notification as read
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Notification ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Notification marked as read"
+        "400":
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Notification not found
+        "500":
+          description: Internal server error 

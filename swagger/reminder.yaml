@@ -1,0 +1,299 @@
+paths:
+  /reminder/create:
+    post:
+      summary: Create a new reminder
+      tags: [Reminders]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - dueDate
+              properties:
+                title:
+                  type: string
+                  description: Reminder title
+                  example: "Follow up with customer"
+                description:
+                  type: string
+                  description: Reminder description
+                  example: "Call customer to check on service satisfaction"
+                dueDate:
+                  type: string
+                  format: date-time
+                  description: Reminder due date
+                  example: "2024-01-15T10:00:00Z"
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, URGENT]
+                  description: Reminder priority
+                  example: "MEDIUM"
+                customerId:
+                  type: string
+                  description: Associated customer ID
+                  example: "507f1f77bcf86cd799439011"
+      responses:
+        "201":
+          description: Reminder created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Reminder created successfully"
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      dueDate:
+                        type: string
+                        format: date-time
+                      priority:
+                        type: string
+                      status:
+                        type: string
+                        enum: [PENDING, COMPLETED, OVERDUE]
+                      createdAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /reminder/getAll:
+    get:
+      summary: Get all reminders for user
+      tags: [Reminders]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PENDING, COMPLETED, OVERDUE, ALL]
+          description: Filter reminders by status
+          example: "PENDING"
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number for pagination
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of reminders per page
+          example: 10
+      responses:
+        "200":
+          description: Reminders retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Reminders retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        dueDate:
+                          type: string
+                          format: date-time
+                        priority:
+                          type: string
+                        status:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        "401":
+          description: Unauthorized - authentication required
+        "500":
+          description: Internal server error
+
+  /reminder/update/{id}:
+    put:
+      summary: Update reminder
+      tags: [Reminders]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Reminder ID
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Reminder title
+                  example: "Updated reminder title"
+                description:
+                  type: string
+                  description: Reminder description
+                  example: "Updated reminder description"
+                dueDate:
+                  type: string
+                  format: date-time
+                  description: Reminder due date
+                  example: "2024-01-20T10:00:00Z"
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, URGENT]
+                  description: Reminder priority
+                  example: "HIGH"
+                status:
+                  type: string
+                  enum: [PENDING, COMPLETED, OVERDUE]
+                  description: Reminder status
+                  example: "COMPLETED"
+      responses:
+        "200":
+          description: Reminder updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Reminder updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      dueDate:
+                        type: string
+                        format: date-time
+                      priority:
+                        type: string
+                      status:
+                        type: string
+                      updatedAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Reminder not found
+        "500":
+          description: Internal server error
+
+  /reminder/delete/{id}:
+    delete:
+      summary: Delete reminder
+      tags: [Reminders]
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Reminder ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: Reminder deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Reminder deleted successfully"
+        "400":
+          description: Bad request - invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - authentication required
+        "404":
+          description: Reminder not found
+        "500":
+          description: Internal server error
