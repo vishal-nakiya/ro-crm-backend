@@ -65,6 +65,10 @@ const customersController = () => {
     getCustomers: async (req, res) => {
       try {
         const status = req.query.status;
+        const search = req.query.search;
+        const startDate = req.query.startDate;
+        const endDate = req.query.endDate;
+
         // Validate status field
         const validStatuses = ['ACTIVE', 'OFFLINE'];
         if (!status) {
@@ -73,7 +77,33 @@ const customersController = () => {
         if (!validStatuses.includes(status)) {
           return sendErrorResponse(400, res, "Invalid status. Must be one of: " + validStatuses.join(', '));
         }
-        const customers = await Customer.find(status ? { status } : {})
+
+        // Build query object
+        let query = { status };
+
+        // Add search functionality
+        if (search && search.trim() !== '') {
+          query.$or = [
+            { fullName: { $regex: search, $options: 'i' } },
+            { contactNumber: { $regex: search, $options: 'i' } },
+            { address: { $regex: search, $options: 'i' } }
+          ];
+        }
+
+        // Add date filtering
+        if (startDate || endDate) {
+          query.joiningDate = {};
+
+          if (startDate) {
+            query.joiningDate.$gte = new Date(startDate);
+          }
+
+          if (endDate) {
+            query.joiningDate.$lte = new Date(endDate);
+          }
+        }
+
+        const customers = await Customer.find(query)
           .populate('services')
           .sort({ createdAt: -1 });
         sendSuccessResponse(200, res, 'Customers fetched successfully', customers, customers.length);
