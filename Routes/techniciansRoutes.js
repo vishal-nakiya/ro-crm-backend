@@ -88,6 +88,8 @@ Router.post("/login", [
     body("contactNumber", "contactNumber can not be blank").exists(),
     body("accountPassword", "accountPassword can not be blank").exists(),
 ], techniciansController().techniciansLogin);
+// Technician check route
+Router.post("/check", techniciansController().techniciansCheck);
 // Technician logout route
 Router.post("/logout", mobileMiddleware, [
     body("refresh_token", "Refresh Token can not be blank").exists(),],

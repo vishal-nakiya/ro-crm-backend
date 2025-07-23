@@ -147,44 +147,55 @@ const techniciansController = () => {
         return handleServerError(res);
       }
     },
-    // techniciansLogin: async (req, res) => {
-    //   try {
-    //     const token = req.headers.authorization?.split(' ')[1];
-    //     if (!token) {
-    //       return sendErrorResponse(401, res, "No Firebase token provided");
-    //     }
+    techniciansCheck: async (req, res) => {
+      try {
+    // const token = req.headers.authorization?.split(' ')[1];
+    // if (!token) {
+    //   return sendErrorResponse(401, res, "No Firebase token provided");
+    // }
 
-    //     // ✅ Step 1: Verify Firebase ID token
-    //     const decoded = await admin.auth().verifyIdToken(token);
-    //     const phone = decoded.phone_number;
+        // // ✅ Step 1: Verify Firebase ID token
+        // const decoded = await admin.auth().verifyIdToken(token);
+        // const phone = decoded.phone_number;
 
-    //     if (!phone) {
-    //       return sendErrorResponse(400, res, 'Phone number missing in Firebase token');
-    //     }
+        if (!req.body.contactNumber) {
+          return sendErrorResponse(400, res, 'Phone number missing');
+        }
 
-    //     // ✅ Step 2: Lookup technician only (no auto-create)
-    //     const technician = await Technician.findOne({ contactNumber: phone, deletedAt: null });
+        // ✅ Step 2: Lookup technician only (no auto-create)
+        const technician = await Technician.findOne({ contactNumber: req.body.contactNumber, deletedAt: null });
 
-    //     if (!technician) {
-    //       return sendErrorResponse(404, res, 'Technician not registered. Contact admin.');
-    //     }
+        if (!technician) {
+          return sendErrorResponse(404, res, 'Technician not registered. Contact admin.');
+        }
 
-    //     // ✅ Step 3: Respond with technician data
-    //     sendSuccessResponse(200, res, 'Login successful', {
-    //       success: true,
-    //       message: `Welcome ${technician.fullName}`,
-    //       data: {
-    //         id: technician._id,
-    //         fullName: technician.fullName,
-    //         contactNumber: technician.contactNumber
-    //       }
-    //     });
+        const data = { user: { id: technician._id } };
 
-    //   } catch (error) {
-    //     console.error('Firebase login error:', error);
-    //     return sendErrorResponse(500, res, 'Login failed', error);
-    //   }
-    // },
+        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '2h' });
+        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '8h' });
+
+        // Save tokens to the technician document (optional)
+        technician.authToken = authToken;
+        technician.refreshToken = refreshToken;
+        await technician.save();
+
+        res.cookie("authorization", `Bearer ${authToken}`).status(200).json({
+          success: true,
+          message: `Welcome ${technician.fullName}`,
+          data: {
+            authToken,
+            refreshToken,
+            id: technician._id,
+            fullName: technician.fullName,
+            contactNumber: technician.contactNumber
+          }
+        });
+
+      } catch (error) {
+        console.error('Firebase login error:', error);
+        return sendErrorResponse(500, res, 'Login failed', error);
+      }
+    },
     techniciansRefreshToken: async (req, res) => {
       try {
         // Validate request body
