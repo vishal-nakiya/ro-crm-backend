@@ -5,36 +5,127 @@ const { sendSuccessResponse, sendErrorResponse, handleServerError, generateServi
 const Service = require("../../Models/Service");
 const moment = require("moment");
 const Task = require("../../Models/Task");
+const mongoose = require("mongoose");
 
 const serviceController = () => {
   return {
     getServices: async (req, res) => {
       try {
-        const { month = 'current', category } = req.query;
+        const {
+          category,
+          startDate,
+          endDate,
+          search,
+          status
+        } = req.query;
         const technicianId = req.technician?._id || req.user?.id;
 
-        const start = moment().startOf('month');
-        const end = moment().endOf('month');
-
         const query = {
-          technicianId,
-          status: 'PENDING',
+          technicianId: technicianId ? new mongoose.Types.ObjectId(technicianId) : technicianId,
+          status: status || 'PENDING',
         };
 
+        // Category filter
         if (category) {
           query.category = category;
         }
 
-        if (month === 'current') {
-          query.scheduledDate = { $gte: start.toDate(), $lte: end.toDate() };
+        // Date filtering logic
+        if (startDate && endDate) {
+          query.scheduledDate = {
+            $gte: moment(startDate).startOf('day').toDate(),
+            $lte: moment(endDate).endOf('day').toDate()
+          };
         }
 
-        const services = await Service.find(query).sort({ scheduledDate: 1 });
+        // Date filtering logic
+        if (startDate && endDate) {
+          query.scheduledDate = {
+            $gte: moment(startDate).startOf('day').toDate(),
+            $lte: moment(endDate).endOf('day').toDate()
+          };
+        }
+
+        // Search functionality
+        if (search) {
+          const searchRegex = new RegExp(search, 'i');
+          query.$or = [
+            { serviceNumber: { $regex: searchRegex } },
+            { category: { $regex: searchRegex } }
+          ];
+
+          // Also search in customer name if customerId is populated
+          // This will be handled by aggregation pipeline
+        }
+
+        let services;
+
+
+
+        if (search) {
+          // Use aggregation to include customer name in search
+          services = await Service.aggregate([
+            {
+              $match: query
+            },
+            {
+              $lookup: {
+                from: 'customers',
+                localField: 'customerId',
+                foreignField: '_id',
+                as: 'customer'
+              }
+            },
+            {
+              $unwind: {
+                path: '$customer',
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $match: {
+                $or: [
+                  { serviceNumber: { $regex: new RegExp(search, 'i') } },
+                  { category: { $regex: new RegExp(search, 'i') } },
+                  { 'customer.fullName': { $regex: new RegExp(search, 'i') } },
+                  { 'customer.area': { $regex: new RegExp(search, 'i') } }
+                ]
+              }
+            },
+            {
+              $sort: { scheduledDate: 1 }
+            }
+          ]);
+        } else {
+          // Use aggregation to include customer information for mobile app
+          services = await Service.aggregate([
+            {
+              $match: query
+            },
+            {
+              $lookup: {
+                from: 'customers',
+                localField: 'customerId',
+                foreignField: '_id',
+                as: 'customer'
+              }
+            },
+            {
+              $unwind: {
+                path: '$customer',
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $sort: { scheduledDate: 1 }
+            }
+          ]);
+        }
 
         sendSuccessResponse(200, res, "Services fetched successfully", services);
       } catch (error) {
         console.log(error);
-        logError(error);
+        logError(error, req);
         handleServerError(500, res, "Failed to fetch services");
       }
     },
