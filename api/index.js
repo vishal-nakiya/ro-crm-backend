@@ -62,6 +62,16 @@ app.use((error, req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
+    try {
+        await connectDB(); // ensure DB connected
+        next();
+    } catch (err) {
+        console.error('❌ MongoDB not connected for this request:', err.message);
+        res.status(500).json({ message: 'Internal server error: DB connection failed' });
+    }
+});
+
+app.use(async (req, res, next) => {
     const logNumber = moment().format("YYYYMMDDHHmmss");
     req.headers.lognumber = logNumber;
 
