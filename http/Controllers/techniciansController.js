@@ -102,7 +102,7 @@ const techniciansController = () => {
           return sendErrorResponse(422, res, errors.errors[0].msg);
         }
 
-        const { contactNumber, accountPassword } = req.body;
+        const { contactNumber } = req.body;
 
         const technician = await Technician.findOne({
           contactNumber,
@@ -114,10 +114,10 @@ const techniciansController = () => {
         }
 
         // If passwords are hashed, use bcrypt.compare instead
-        const comparePassword = await bcrypt.compare(accountPassword, technician.accountPassword); // it will return true or false
-        if (!comparePassword) {
-          return sendErrorResponse(401, res, "Please enter valid password");
-        }
+        // const comparePassword = await bcrypt.compare(accountPassword, technician.accountPassword); // it will return true or false
+        // if (!comparePassword) {
+        //   return sendErrorResponse(401, res, "Please enter valid password");
+        // }
 
         const data = { user: { id: technician._id } };
 

@@ -86,7 +86,6 @@ Router.post("/register", validateTechnicianRegistration, techniciansController()
 // Technician login route
 Router.post("/login", [
     body("contactNumber", "contactNumber can not be blank").exists(),
-    body("accountPassword", "accountPassword can not be blank").exists(),
 ], techniciansController().techniciansLogin);
 // Technician check route
 Router.post("/check", techniciansController().techniciansCheck);
