@@ -121,8 +121,8 @@ const techniciansController = () => {
 
         const data = { user: { id: technician._id } };
 
-        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '2h' });
-        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '8h' });
+        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d' });
+        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d' });
 
         // Save tokens to the technician document (optional)
         technician.authToken = authToken;

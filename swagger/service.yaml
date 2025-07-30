@@ -21,6 +21,33 @@ paths:
             enum: [AMC, NEW, PAID]
           description: Filter by service category
           example: AMC
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PENDING, COMPLETED]
+          description: Filter by service status
+          example: PENDING
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+          description: Start date for filtering (YYYY-MM-DD)
+          example: "2024-01-01"
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+          description: End date for filtering (YYYY-MM-DD)
+          example: "2024-01-31"
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search in service number, category, or customer name
+          example: "AMC"
       responses:
         "200":
           description: Services retrieved successfully

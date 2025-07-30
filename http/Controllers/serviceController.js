@@ -20,9 +20,17 @@ const serviceController = () => {
         } = req.query;
         const technicianId = req.technician?._id || req.user?.id;
 
+        // Validate status parameter
+        const validStatuses = ['PENDING', 'COMPLETED'];
+        const requestedStatus = status || 'PENDING';
+
+        if (status && !validStatuses.includes(status)) {
+          return sendErrorResponse(400, res, `Invalid status. Valid statuses are: ${validStatuses.join(', ')}`);
+        }
+
         const query = {
           technicianId: technicianId ? new mongoose.Types.ObjectId(technicianId) : technicianId,
-          status: status || 'PENDING',
+          status: requestedStatus,
         };
 
         // Category filter
@@ -46,21 +54,7 @@ const serviceController = () => {
           };
         }
 
-        // Search functionality
-        if (search) {
-          const searchRegex = new RegExp(search, 'i');
-          query.$or = [
-            { serviceNumber: { $regex: searchRegex } },
-            { category: { $regex: searchRegex } }
-          ];
-
-          // Also search in customer name if customerId is populated
-          // This will be handled by aggregation pipeline
-        }
-
         let services;
-
-
 
         if (search) {
           // Use aggregation to include customer name in search
@@ -84,11 +78,28 @@ const serviceController = () => {
             },
             {
               $match: {
-                $or: [
-                  { serviceNumber: { $regex: new RegExp(search, 'i') } },
-                  { category: { $regex: new RegExp(search, 'i') } },
-                  { 'customer.fullName': { $regex: new RegExp(search, 'i') } },
-                  { 'customer.area': { $regex: new RegExp(search, 'i') } }
+                $and: [
+                  // Apply the original filters (technicianId, status, etc.)
+                  {
+                    technicianId: technicianId ? new mongoose.Types.ObjectId(technicianId) : technicianId,
+                    status: requestedStatus,
+                    ...(category && { category }),
+                    ...(startDate && endDate && {
+                      scheduledDate: {
+                        $gte: moment(startDate).startOf('day').toDate(),
+                        $lte: moment(endDate).endOf('day').toDate()
+                      }
+                    })
+                  },
+                  // Apply search filter
+                  {
+                    $or: [
+                      { $expr: { $regexMatch: { input: { $toString: "$serviceNumber" }, regex: search, options: "i" } } },
+                      { category: { $regex: new RegExp(search, 'i') } },
+                      { 'customer.fullName': { $regex: new RegExp(search, 'i') } },
+                      { 'customer.area': { $regex: new RegExp(search, 'i') } }
+                    ]
+                  }
                 ]
               }
             },
