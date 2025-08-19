@@ -1,0 +1,284 @@
+openapi: 3.0.0
+info:
+  title: Admin Dashboard API
+  description: API endpoints for admin dashboard KPIs and analytics
+  version: 1.0.0
+  contact:
+    name: RO CRM Backend
+    email: support@rocrm.com
+
+servers:
+  - url: /api/admin-dashboard
+    description: Admin Dashboard API base URL
+
+paths:
+  /kpis:
+    get:
+      summary: Get Admin Dashboard KPIs
+      description: Retrieve comprehensive KPI metrics for the admin dashboard including total users, revenue, services, and active users
+      tags:
+        - Admin Dashboard
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved dashboard KPIs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Admin dashboard KPIs fetched successfully"
+                  data:
+                    type: object
+                    properties:
+                      kpis:
+                        type: object
+                        properties:
+                          totalUsers:
+                            type: integer
+                            description: Total number of customers
+                            example: 150
+                          activeUsers:
+                            type: integer
+                            description: Number of active customers
+                            example: 120
+                          totalRevenue:
+                            type: number
+                            description: Total revenue from all paid bills
+                            example: 25000.50
+                          servicesDone:
+                            type: integer
+                            description: Number of completed services
+                            example: 85
+                          pendingServices:
+                            type: integer
+                            description: Number of pending services
+                            example: 15
+                          totalTechnicians:
+                            type: integer
+                            description: Total number of technicians
+                            example: 8
+                          totalBills:
+                            type: integer
+                            description: Total number of paid bills
+                            example: 95
+                      growth:
+                        type: object
+                        properties:
+                          revenueGrowth:
+                            type: string
+                            description: Revenue growth percentage compared to last month
+                            example: "12.5%"
+                          currentMonthRevenue:
+                            type: number
+                            description: Revenue for current month
+                            example: 8500.00
+                          lastMonthRevenue:
+                            type: number
+                            description: Revenue for last month
+                            example: 7555.56
+                      monthlyRevenue:
+                        type: array
+                        description: Monthly revenue data for the last 12 months
+                        example:
+                          - month: "2024-01"
+                            revenue: 8500.00
+                            billCount: 25
+                          - month: "2024-02"
+                            revenue: 9200.00
+                            billCount: 28
+                          - month: "2024-03"
+                            revenue: 7800.00
+                            billCount: 22
+                          - month: "2024-04"
+                            revenue: 10500.00
+                            billCount: 32
+                          - month: "2024-05"
+                            revenue: 11200.00
+                            billCount: 35
+                          - month: "2024-06"
+                            revenue: 9800.00
+                            billCount: 30
+                          - month: "2024-07"
+                            revenue: 8700.00
+                            billCount: 26
+                          - month: "2024-08"
+                            revenue: 9500.00
+                            billCount: 29
+                          - month: "2024-09"
+                            revenue: 10300.00
+                            billCount: 31
+                          - month: "2024-10"
+                            revenue: 11800.00
+                            billCount: 36
+                          - month: "2024-11"
+                            revenue: 12500.00
+                            billCount: 38
+                          - month: "2024-12"
+                            revenue: 13200.00
+                            billCount: 40
+                        items:
+                          type: object
+                          properties:
+                            month:
+                              type: string
+                              description: Month in YYYY-MM format
+                              example: "2024-01"
+                            revenue:
+                              type: number
+                              description: Revenue for the month
+                              example: 8500.00
+                            billCount:
+                              type: integer
+                              description: Number of bills for the month
+                              example: 25
+                      servicesByCategory:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            category:
+                              type: string
+                              description: Service category
+                              example: "AMC"
+                            count:
+                              type: integer
+                              description: Number of services in this category
+                              example: 45
+                      topTechnicians:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            technicianName:
+                              type: string
+                              description: Name of the technician
+                              example: "John Doe"
+                            completedServices:
+                              type: integer
+                              description: Number of completed services
+                              example: 25
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "500":
+          description: Internal server error
+
+  /analytics:
+    get:
+      summary: Get Detailed Analytics
+      description: Retrieve detailed analytics with optional date filtering for revenue, customer growth, and service completion
+      tags:
+        - Admin Dashboard
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for analytics (YYYY-MM-DD format)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2024-01-01"
+        - name: endDate
+          in: query
+          description: End date for analytics (YYYY-MM-DD format)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2024-12-31"
+      responses:
+        "200":
+          description: Successfully retrieved detailed analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Detailed analytics fetched successfully"
+                  data:
+                    type: object
+                    properties:
+                      revenueAnalytics:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              description: Date in YYYY-MM-DD format
+                              example: "2024-01-15"
+                            revenue:
+                              type: number
+                              description: Revenue for the date
+                              example: 1250.00
+                            billCount:
+                              type: integer
+                              description: Number of bills for the date
+                              example: 8
+                      customerGrowth:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            period:
+                              type: string
+                              description: Period in YYYY-MM format
+                              example: "2024-01"
+                            newCustomers:
+                              type: integer
+                              description: Number of new customers in the period
+                              example: 12
+                      serviceAnalytics:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            period:
+                              type: string
+                              description: Period in YYYY-MM format
+                              example: "2024-01"
+                            totalServices:
+                              type: integer
+                              description: Total services in the period
+                              example: 45
+                            completedServices:
+                              type: integer
+                              description: Completed services in the period
+                              example: 38
+                            pendingServices:
+                              type: integer
+                              description: Pending services in the period
+                              example: 7
+                            completionRate:
+                              type: integer
+                              description: Service completion rate percentage
+                              example: 84
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "500":
+          description: Internal server error
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+tags:
+  - name: Admin Dashboard
+    description: Admin dashboard KPI and analytics endpoints

@@ -363,7 +363,91 @@ const techniciansController = () => {
         logError(error, req);
         return handleServerError(res);
       }
-    }
+    },
+    techniciansList: async (req, res) => {
+      try {
+        const {
+          page = 1,
+          limit = 10,
+          search = "",
+          sortBy = "createdAt",
+          sortOrder = "desc",
+          gender,
+          countryName,
+          stateName,
+          cityName
+        } = req.query;
+
+        // Convert page and limit to numbers
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
+
+        // Build search query
+        let searchQuery = { deletedAt: null };
+
+        if (search) {
+          searchQuery.$or = [
+            { fullName: { $regex: search, $options: 'i' } },
+            { contactNumber: { $regex: search, $options: 'i' } },
+            { emailAddress: { $regex: search, $options: 'i' } },
+            { companyName: { $regex: search, $options: 'i' } },
+            { address: { $regex: search, $options: 'i' } },
+            { countryName: { $regex: search, $options: 'i' } },
+            { stateName: { $regex: search, $options: 'i' } },
+            { cityName: { $regex: search, $options: 'i' } }
+          ];
+        }
+
+        // Add filter conditions
+        if (gender) {
+          searchQuery.gender = gender;
+        }
+        if (countryName) {
+          searchQuery.countryName = { $regex: countryName, $options: 'i' };
+        }
+        if (stateName) {
+          searchQuery.stateName = { $regex: stateName, $options: 'i' };
+        }
+        if (cityName) {
+          searchQuery.cityName = { $regex: cityName, $options: 'i' };
+        }
+
+        // Build sort object
+        const sortObject = {};
+        sortObject[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+        // Execute query with pagination
+        const technicians = await Technician.find(searchQuery)
+          .select('-accountPassword -otp -authToken -refreshToken -firebase_uid -fcmToken')
+          .sort(sortObject)
+          .skip(skip)
+          .limit(limitNum);
+
+        // Get total count for pagination
+        const totalTechnicians = await Technician.countDocuments(searchQuery);
+        const totalPages = Math.ceil(totalTechnicians / limitNum);
+
+        // Build pagination info
+        const paginationInfo = {
+          currentPage: pageNum,
+          totalPages,
+          totalItems: totalTechnicians,
+          itemsPerPage: limitNum,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
+        };
+
+        sendSuccessResponse(200, res, "Technicians fetched successfully.", {
+          technicians,
+          pagination: paginationInfo
+        });
+      } catch (error) {
+        console.error(error);
+        logError(error, req);
+        return handleServerError(res);
+      }
+    },
   };
 };
 

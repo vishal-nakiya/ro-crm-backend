@@ -112,7 +112,8 @@ Router.post("/verify-otp", [
     body("otp", "otp can not be blank").exists(),
 ], techniciansController().techniciansVerifyOTP);
 
-
+// Get technicians list with pagination and search
+Router.get("/list", techniciansController().techniciansList);
 
 
 module.exports = Router;

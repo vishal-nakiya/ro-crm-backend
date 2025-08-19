@@ -13,10 +13,12 @@ const taskRoutes = require('./taskRoutes');
 const complaintRoutes = require('./complaintRoutes');
 const reminderRoutes = require('./reminderRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
+const adminDashboardRoutes = require('./adminDashboardRoutes');
 
 // Register all routes with their respective paths
 Router.use('/admin', loginRoutes);
 Router.use('/auth', techniciansRoutes);
+Router.use('/api/technician', techniciansRoutes);
 Router.use('/api/customer', customerRoutes);
 Router.use('/api/bill', billRoutes);
 Router.use('/api/service', serviceRoutes);
@@ -24,6 +26,7 @@ Router.use('/api/task', taskRoutes);
 Router.use('/api/complaint', complaintRoutes);
 Router.use('/api/reminder', reminderRoutes);
 Router.use('/api/dashboard', dashboardRoutes);
+Router.use('/api/admin-dashboard', adminDashboardRoutes);
 // Router.use('/api/otp', otpRoutes);
 // Router.use('/api/notification', notificationRoutes);
 

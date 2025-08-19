@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "nodemon api/index.js"
+    "start": "nodemon api/index.js",
+    "create-admin": "node scripts/createDefaultAdmin.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

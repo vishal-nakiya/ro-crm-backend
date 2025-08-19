@@ -1,23 +1,37 @@
-const admin = require('../../config/firebase');
-const Technician = require('../../Models/Technician');
+const jwt = require('jsonwebtoken');
+const Admin = require('../../Models/Admin');
+// const { logError } = require('../utils/logger');
 
 const authMiddleware = async (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
+    const authHeader = req.cookies['authorization'] || req.headers['authorization'];
+    if (authHeader && authHeader.startsWith("Bearer")) {
+        try {
+            let token = authHeader.split(" ")[1];
+            const data = jwt.verify(token, process.env.JWT_SECRET);
+            const userDataMain = await Admin.findById(data.user.id);
 
-    if (!token) return res.status(401).json({ message: "No token provided" });
+            if (!userDataMain || userDataMain.authToken != token) {
+                return res.status(440).json({
+                    message: "Session expired. Please login again.",
+                    success: false,
+                });
+            }
 
-    try {
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        req.firebaseUser = decodedToken;
-
-        // OPTIONAL: Map Firebase UID to technician in your DB
-        const technician = await Technician.findOne({ firebaseUID: decodedToken.uid });
-        if (!technician) return res.status(401).json({ message: "Technician not found" });
-
-        req.technician = technician; // Now available in controllers
-        next();
-    } catch (error) {
-        res.status(401).json({ message: "Invalid Firebase token", error });
+            req.user = userDataMain;
+            next();
+        } catch (error) {
+            console.log(error);
+            // logError(error, req);
+            res.status(440).json({
+                message: "Session expired. Please login again.",
+                success: false,
+            });
+        }
+    } else {
+        res.status(440).json({
+            message: "Session expired. Please login again.",
+            success: false,
+        });
     }
 };
 

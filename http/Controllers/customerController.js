@@ -69,17 +69,17 @@ const customersController = () => {
         const startDate = req.query.startDate;
         const endDate = req.query.endDate;
 
-        // Validate status field
-        const validStatuses = ['ACTIVE', 'OFFLINE'];
-        if (!status) {
-          return sendErrorResponse(400, res, "Status is required");
-        }
-        if (!validStatuses.includes(status)) {
-          return sendErrorResponse(400, res, "Invalid status. Must be one of: " + validStatuses.join(', '));
-        }
-
         // Build query object
-        let query = { status };
+        let query = {};
+
+        // Add status filtering only if status is provided
+        if (status) {
+          const validStatuses = ['ACTIVE', 'OFFLINE'];
+          if (!validStatuses.includes(status)) {
+            return sendErrorResponse(400, res, "Invalid status. Must be one of: " + validStatuses.join(', '));
+          }
+          query.status = status;
+        }
 
         // Add search functionality
         if (search && search.trim() !== '') {
