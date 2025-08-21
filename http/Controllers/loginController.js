@@ -129,8 +129,8 @@ const loginController = () => {
         // Update last login
         user.last_login = new Date();
 
-        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '24h' });
-        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d' });
+        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '24h', algorithm: 'HS256' });
+        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d', algorithm: 'HS256' });
 
         // add user token
         user.authToken = authToken;
@@ -172,8 +172,8 @@ const loginController = () => {
             id: user._id,
           },
         };
-        jwt.verify(refresh_token, process.env.JWT_SECRET);
-        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '24h' });
+        jwt.verify(refresh_token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '24h', algorithm: 'HS256' });
         // add user token
 
         await Admin.findByIdAndUpdate(user._id, { authToken: authToken });

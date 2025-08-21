@@ -12,10 +12,14 @@ const mobileMiddleware = async (req, res, next) => {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return sendErrorResponse(401, res, "Authorization token is missing or malformed.");
   }
+
   if (authHeader && authHeader.startsWith("Bearer")) {
     try {
       let authToken = authHeader.split(" ")[1];
-      const data = jwt.verify(authToken, process.env.JWT_SECRET);
+
+      // Explicitly specify the algorithm to avoid "invalid algorithm" error
+      const data = jwt.verify(authToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+
       const TechnicianData = await Technician.findById(data.user.id);
 
       if (!TechnicianData || TechnicianData.deletedAt != null) return sendErrorResponse(401, res, "User Not found")
@@ -27,9 +31,27 @@ const mobileMiddleware = async (req, res, next) => {
       // req.user.middlewareExecTime = moment(middlewareEndTime).diff(moment(middlewareStartTime));
       next();
     } catch (error) {
-      console.log(error);
+      console.log('JWT Verification Error:', error);
       logError(error, req);
-      sendErrorResponse(401, res, error.name)
+
+      let errorMessage = 'Authentication failed';
+      if (error.name === 'JsonWebTokenError') {
+        if (error.message === 'invalid algorithm') {
+          errorMessage = 'Token algorithm not supported';
+        } else if (error.message === 'invalid signature') {
+          errorMessage = 'Invalid token signature';
+        } else if (error.message === 'jwt malformed') {
+          errorMessage = 'Token format is invalid';
+        } else {
+          errorMessage = error.message;
+        }
+      } else if (error.name === 'TokenExpiredError') {
+        errorMessage = 'Token has expired';
+      } else if (error.name === 'NotBeforeError') {
+        errorMessage = 'Token not active yet';
+      }
+
+      sendErrorResponse(401, res, errorMessage);
     }
   } else {
     sendErrorResponse(401, res, "Invalid token")

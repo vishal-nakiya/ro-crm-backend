@@ -7,7 +7,10 @@ const authMiddleware = async (req, res, next) => {
     if (authHeader && authHeader.startsWith("Bearer")) {
         try {
             let token = authHeader.split(" ")[1];
-            const data = jwt.verify(token, process.env.JWT_SECRET);
+
+            // Explicitly specify the algorithm to avoid "invalid algorithm" error
+            const data = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+
             const userDataMain = await Admin.findById(data.user.id);
 
             if (!userDataMain || userDataMain.authToken != token) {
@@ -20,10 +23,26 @@ const authMiddleware = async (req, res, next) => {
             req.user = userDataMain;
             next();
         } catch (error) {
-            console.log(error);
+            console.log('JWT Verification Error:', error);
             // logError(error, req);
+
+            let errorMessage = 'Session expired. Please login again.';
+            if (error.name === 'JsonWebTokenError') {
+                if (error.message === 'invalid algorithm') {
+                    errorMessage = 'Token algorithm not supported';
+                } else if (error.message === 'invalid signature') {
+                    errorMessage = 'Invalid token signature';
+                } else if (error.message === 'jwt malformed') {
+                    errorMessage = 'Token format is invalid';
+                }
+            } else if (error.name === 'TokenExpiredError') {
+                errorMessage = 'Token has expired';
+            } else if (error.name === 'NotBeforeError') {
+                errorMessage = 'Token not active yet';
+            }
+
             res.status(440).json({
-                message: "Session expired. Please login again.",
+                message: errorMessage,
                 success: false,
             });
         }

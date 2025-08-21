@@ -121,8 +121,8 @@ const techniciansController = () => {
 
         const data = { user: { id: technician._id } };
 
-        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d' });
-        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d' });
+        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d', algorithm: 'HS256' });
+        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '365d', algorithm: 'HS256' });
 
         // Save tokens to the technician document (optional)
         technician.authToken = authToken;
@@ -171,8 +171,8 @@ const techniciansController = () => {
 
         const data = { user: { id: technician._id } };
 
-        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '2h' });
-        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '8h' });
+        const authToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '2h', algorithm: 'HS256' });
+        const refreshToken = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: '8h', algorithm: 'HS256' });
 
         // Save tokens to the technician document (optional)
         technician.authToken = authToken;
@@ -217,11 +217,11 @@ const techniciansController = () => {
         }
 
         // Verify the refresh token
-        jwt.verify(refreshToken, process.env.JWT_SECRET);
+        jwt.verify(refreshToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
         // Generate a new access token
         const payload = { technician: { id: technician._id } };
-        const authToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
+        const authToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h", algorithm: 'HS256' });
 
         // Update the user's auth token in the database
         technician.authToken = authToken;
