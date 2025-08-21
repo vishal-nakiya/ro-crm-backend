@@ -41,19 +41,19 @@ const techniciansController = () => {
         const otp = generateOTP(100000, 999999); // 6-digit OTP
 
         const salt = await bcrypt.genSalt(10);
-        const securedPassword = await bcrypt.hash(accountPassword, salt);
+        // const securedPassword = await bcrypt.hash(accountPassword, salt);
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
           return sendErrorResponse(401, res, "No Firebase token provided");
         }
 
         // ✅ Step 1: Verify Firebase ID token
-        const decoded = await admin.auth().verifyIdToken(token);
+        // const decoded = await admin.auth().verifyIdToken(token);
         const technicianData = {
           fullName,
           contactNumber,
-          emailAddress,
-          accountPassword: securedPassword, // you should hash this before saving in production!
+          // emailAddress,
+          // accountPassword: accountPassword, // you should hash this before saving in production!
           gender,
           dateOfBirth: dateOfBirth || new Date("1970-01-01"),
           countryName,
@@ -64,7 +64,7 @@ const techniciansController = () => {
           companyName: companyName?.trim(),
           address,
           otp,
-          firebase_uid: decoded.uid
+          // firebase_uid: decoded.uid
         };
 
         const newTechnician = await Technician.create(technicianData);

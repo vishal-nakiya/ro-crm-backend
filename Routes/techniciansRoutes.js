@@ -22,17 +22,17 @@ const validateTechnicianRegistration = [
         .matches(/^[0-9]{10,15}$/)
         .withMessage("Contact number must be between 10 and 15 digits"),
 
-    body("emailAddress")
-        .notEmpty()
-        .withMessage("Email address is required")
-        .isEmail()
-        .withMessage("Enter a valid email address"),
+    // body("emailAddress")
+    //     .notEmpty()
+    //     .withMessage("Email address is required")
+    //     .isEmail()
+    //     .withMessage("Enter a valid email address"),
 
-    body("accountPassword")
-        .notEmpty()
-        .withMessage("Password is required")
-        .isLength({ min: 6 })
-        .withMessage("Password must be at least 6 characters long"),
+    // body("accountPassword")
+    //     .notEmpty()
+    //     .withMessage("Password is required")
+    //     .isLength({ min: 6 })
+    //     .withMessage("Password must be at least 6 characters long"),
 
     body("gender")
         .notEmpty()
