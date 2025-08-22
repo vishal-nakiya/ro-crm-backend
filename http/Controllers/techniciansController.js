@@ -110,7 +110,9 @@ const techniciansController = () => {
         });
 
         if (!technician) {
-          return sendErrorResponse(401, res, "You have not registered with the mobile!!");
+          return sendErrorResponse(401, res, "You have not registered with the mobile!!", {
+            is_user_registered: false,
+          });
         }
 
         // If passwords are hashed, use bcrypt.compare instead
@@ -133,6 +135,7 @@ const techniciansController = () => {
           success: true,
           message: `Welcome ${technician.fullName}`,
           data: {
+            is_user_registered: true,
             authToken,
             refreshToken,
             id: technician._id,
@@ -166,7 +169,9 @@ const techniciansController = () => {
         const technician = await Technician.findOne({ contactNumber: req.body.contactNumber, deletedAt: null });
 
         if (!technician) {
-          return sendErrorResponse(404, res, 'Technician not registered. Contact admin.');
+          return sendErrorResponse(404, res, 'Technician not registered. Contact admin.', {
+            is_user_registered: false,
+          });
         }
 
         const data = { user: { id: technician._id } };
@@ -183,6 +188,7 @@ const techniciansController = () => {
           success: true,
           message: `Welcome ${technician.fullName}`,
           data: {
+            is_user_registered: true,
             authToken,
             refreshToken,
             id: technician._id,

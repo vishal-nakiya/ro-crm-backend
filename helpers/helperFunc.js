@@ -15,10 +15,11 @@ const helperObj = {
             count //if count parameters needed
         });
     },
-    sendErrorResponse: (statusCode, res, message) => {
+    sendErrorResponse: (statusCode, res, message, data) => {
         res.status(statusCode).json({
             success: false,
-            message
+            message,
+            data
         });
     },
     handleServerError: (res) => {
