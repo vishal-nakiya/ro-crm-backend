@@ -42,10 +42,10 @@ const techniciansController = () => {
 
         const salt = await bcrypt.genSalt(10);
         // const securedPassword = await bcrypt.hash(accountPassword, salt);
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-          return sendErrorResponse(401, res, "No Firebase token provided");
-        }
+        // const token = req.headers.authorization?.split(' ')[1];
+        // if (!token) {
+        //   return sendErrorResponse(401, res, "No Firebase token provided");
+        // }
 
         // ✅ Step 1: Verify Firebase ID token
         // const decoded = await admin.auth().verifyIdToken(token);
