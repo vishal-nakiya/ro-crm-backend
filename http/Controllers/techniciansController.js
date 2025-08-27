@@ -80,16 +80,6 @@ const techniciansController = () => {
           newTechnician
         );
       } catch (error) {
-        if (error.code === 11000) {
-          const duplicateField = Object.keys(error.keyValue)[0];
-          const userFriendlyField =
-            duplicateField === "emailAddress"
-              ? "Email address"
-              : duplicateField === "contactNumber"
-                ? "Mobile number"
-                : "Field";
-          return sendErrorResponse(409, res, `${userFriendlyField} is already registered. Please use a different one.`);
-        }
         console.error(error);
         logError(error, req);
         return handleServerError(res);

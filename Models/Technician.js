@@ -5,7 +5,7 @@ const technicianSchema = new mongoose.Schema(
         fullName: { type: String, required: true },
         contactNumber: { type: String, required: true, unique: true },
         address: { type: String, required: true },
-        emailAddress: { type: String, required: false, unique: true },
+        emailAddress: { type: String, required: false },
         // accountPassword: { type: String, required: false },
         gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
         dateOfBirth: { type: Date },
