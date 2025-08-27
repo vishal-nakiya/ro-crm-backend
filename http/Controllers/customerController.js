@@ -168,9 +168,17 @@ const customersController = () => {
     getCustomerById: async (req, res) => {
       try {
         const { id } = req.params;
-        const customer = await Customer.findById(id).populate('services');
+        const customer = await Customer.findById(id).populate('services').populate('technicianId');
         if (!customer) return sendErrorResponse(404, res, "Customer not found");
-        sendSuccessResponse(200, res, "Customer fetched successfully", customer);
+
+        // Convert to plain object and rename the field
+        const customerObj = customer.toObject();
+        if (customerObj.technicianId) {
+          customerObj.technician = customerObj.technicianId;
+          delete customerObj.technicianId;
+        }
+
+        sendSuccessResponse(200, res, "Customer fetched successfully", customerObj);
       } catch (error) {
         console.error(error);
         handleServerError(res, error);
