@@ -21,7 +21,15 @@ const taskController = () => {
                 }
 
                 const tasks = await Task.find(query)
-                    .populate('services', 'serviceNumber category status scheduledDate customerId')
+                    .populate({
+                        path: 'services',
+                        select: 'serviceNumber category status scheduledDate completedDate partsUsed technicianId taskId reminders deletedAt createdAt updatedAt',
+                        populate: {
+                            path: 'customerId',
+                            select: 'fullName contactNumber address area joiningDate tds roModel category numberOfServices remark status technicianId services reminders createdAt updatedAt',
+                            as: 'customer'
+                        }
+                    })
                     .populate('sharedWith', 'fullName contactNumber')
                     .sort({ createdAt: -1 });
 
@@ -40,7 +48,15 @@ const taskController = () => {
                 const technicianId = req.technician?._id || req.user?.id;
 
                 const task = await Task.findOne({ _id: id, technicianId })
-                    .populate('services', 'serviceNumber category status scheduledDate customerId partsUsed')
+                    .populate({
+                        path: 'services',
+                        select: 'serviceNumber category status scheduledDate completedDate partsUsed technicianId taskId reminders createdAt',
+                        populate: {
+                            path: 'customerId',
+                            select: 'fullName contactNumber address area joiningDate tds roModel category numberOfServices remark status technicianId',
+                            as: 'customer'
+                        }
+                    })
                     .populate('sharedWith', 'fullName contactNumber');
 
                 if (!task) {
@@ -114,7 +130,15 @@ const taskController = () => {
                 await task.save();
 
                 const updatedTask = await Task.findById(task._id)
-                    .populate('services', 'serviceNumber category status scheduledDate customerId')
+                    .populate({
+                        path: 'services',
+                        select: 'serviceNumber category status scheduledDate completedDate partsUsed technicianId taskId reminders deletedAt createdAt updatedAt',
+                        populate: {
+                            path: 'customerId',
+                            select: 'fullName contactNumber address area joiningDate tds roModel category numberOfServices remark status technicianId services reminders createdAt updatedAt',
+                            as: 'customer'
+                        }
+                    })
                     .populate('sharedWith', 'fullName contactNumber');
 
                 sendSuccessResponse(200, res, "Task status updated successfully", updatedTask);
@@ -149,7 +173,15 @@ const taskController = () => {
                 await task.save();
 
                 const updatedTask = await Task.findById(task._id)
-                    .populate('services', 'serviceNumber category status scheduledDate customerId')
+                    .populate({
+                        path: 'services',
+                        select: 'serviceNumber category status scheduledDate completedDate partsUsed technicianId taskId reminders deletedAt createdAt updatedAt',
+                        populate: {
+                            path: 'customerId',
+                            select: 'fullName contactNumber address area joiningDate tds roModel category numberOfServices remark status technicianId services reminders createdAt updatedAt',
+                            as: 'customer'
+                        }
+                    })
                     .populate('sharedWith', 'fullName contactNumber');
 
                 sendSuccessResponse(200, res, "Task updated successfully", updatedTask);
@@ -199,7 +231,15 @@ const taskController = () => {
                 );
 
                 const updatedTask = await Task.findById(task._id)
-                    .populate('services', 'serviceNumber category status scheduledDate customerId')
+                    .populate({
+                        path: 'services',
+                        select: 'serviceNumber category status scheduledDate completedDate partsUsed technicianId taskId reminders deletedAt createdAt updatedAt',
+                        populate: {
+                            path: 'customerId',
+                            select: 'fullName contactNumber address area joiningDate tds roModel category numberOfServices remark status technicianId services reminders createdAt updatedAt',
+                            as: 'customer'
+                        }
+                    })
                     .populate('sharedWith', 'fullName contactNumber');
 
                 sendSuccessResponse(200, res, "Services added to task successfully", updatedTask);
@@ -238,7 +278,15 @@ const taskController = () => {
                 );
 
                 const updatedTask = await Task.findById(task._id)
-                    .populate('services', 'serviceNumber category status scheduledDate customerId')
+                    .populate({
+                        path: 'services',
+                        select: 'serviceNumber category status scheduledDate completedDate partsUsed technicianId taskId reminders deletedAt createdAt updatedAt',
+                        populate: {
+                            path: 'customerId',
+                            select: 'fullName contactNumber address area joiningDate tds roModel category numberOfServices remark status technicianId services reminders createdAt updatedAt',
+                            as: 'customer'
+                        }
+                    })
                     .populate('sharedWith', 'fullName contactNumber');
 
                 sendSuccessResponse(200, res, "Services removed from task successfully", updatedTask);
