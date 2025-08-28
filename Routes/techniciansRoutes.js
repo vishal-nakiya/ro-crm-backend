@@ -34,45 +34,45 @@ const validateTechnicianRegistration = [
     //     .isLength({ min: 6 })
     //     .withMessage("Password must be at least 6 characters long"),
 
-    body("gender")
-        .notEmpty()
-        .withMessage("Gender is required")
-        .isIn(["MALE", "FEMALE", "OTHER"])
-        .withMessage("Gender must be one of 'MALE', 'FEMALE', or 'OTHER'"),
+    // body("gender")
+    //     .notEmpty()
+    //     .withMessage("Gender is required")
+    //     .isIn(["MALE", "FEMALE", "OTHER"])
+    //     .withMessage("Gender must be one of 'MALE', 'FEMALE', or 'OTHER'"),
 
-    body("dateOfBirth")
-        .optional()
-        .isISO8601()
-        .withMessage("Date of birth must be a valid date in ISO 8601 format"),
+    // body("dateOfBirth")
+    //     .optional()
+    //     .isISO8601()
+    //     .withMessage("Date of birth must be a valid date in ISO 8601 format"),
 
-    body("countryName")
-        .notEmpty()
-        .withMessage("Country name is required")
-        .isString()
-        .withMessage("Country name must be a string"),
+    // body("countryName")
+    //     .notEmpty()
+    //     .withMessage("Country name is required")
+    //     .isString()
+    //     .withMessage("Country name must be a string"),
 
-    body("stateName")
-        .notEmpty()
-        .withMessage("State name is required")
-        .isString()
-        .withMessage("State name must be a string"),
+    // body("stateName")
+    //     .notEmpty()
+    //     .withMessage("State name is required")
+    //     .isString()
+    //     .withMessage("State name must be a string"),
 
-    body("cityName")
-        .notEmpty()
-        .withMessage("City name is required")
-        .isString()
-        .withMessage("City name must be a string"),
+    // body("cityName")
+    //     .notEmpty()
+    //     .withMessage("City name is required")
+    //     .isString()
+    //     .withMessage("City name must be a string"),
 
-    body("postalCode")
-        .optional()
-        .matches(/^(\d{4}|\d{6})$/)
-        .withMessage("Postal code must be either 4 or 6 digits"),
+    // body("postalCode")
+    //     .optional()
+    //     .matches(/^(\d{4}|\d{6})$/)
+    //     .withMessage("Postal code must be either 4 or 6 digits"),
 
-    body("countryCode")
-        .notEmpty()
-        .withMessage("Country code is required")
-        .matches(/^\+[0-9]{1,4}$/)
-        .withMessage("Country code must be in the format '+<digits>'"),
+    // body("countryCode")
+    //     .notEmpty()
+    //     .withMessage("Country code is required")
+    //     .matches(/^\+[0-9]{1,4}$/)
+    //     .withMessage("Country code must be in the format '+<digits>'"),
 
     body("address")
         .notEmpty()
