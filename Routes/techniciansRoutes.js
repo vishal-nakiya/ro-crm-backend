@@ -82,7 +82,7 @@ const validateTechnicianRegistration = [
 ];
 
 // Technician registration route
-Router.post("/register", validateTechnicianRegistration, techniciansController().techniciansRegister);
+Router.post("/register", techniciansController().techniciansRegister);
 // Technician login route
 Router.post("/login", [
     body("contactNumber", "contactNumber can not be blank").exists(),
