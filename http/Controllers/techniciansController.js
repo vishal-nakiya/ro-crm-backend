@@ -130,7 +130,9 @@ const techniciansController = () => {
             refreshToken,
             id: technician._id,
             fullName: technician.fullName,
-            contactNumber: technician.contactNumber
+            contactNumber: technician.contactNumber,
+            companyName: technician.companyName,
+            address: technician.address
           }
         });
 
