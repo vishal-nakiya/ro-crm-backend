@@ -32,9 +32,15 @@ const helperObj = {
         const now = new Date();
         const serviceList = [];
 
-        for (let i = 0; i < count; i++) {
+        // Calculate number of services: 12/count (minimum 1 service)
+        const numberOfServices = Math.max(1, Math.floor(12 / count));
+
+        // Calculate interval between services in months
+        const intervalMonths = 12 / numberOfServices;
+
+        for (let i = 0; i < numberOfServices; i++) {
             const scheduled = new Date(now);
-            scheduled.setMonth(now.getMonth() + i * 3); // every 3 months
+            scheduled.setMonth(now.getMonth() + (i * intervalMonths));
 
             serviceList.push({
                 customerId,
