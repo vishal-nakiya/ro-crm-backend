@@ -48,7 +48,7 @@ const customersController = () => {
           technicianId
         });
 
-        const serviceIds = await generateServices(customer._id, numberOfServices, category, technicianId);
+        const serviceIds = await generateServices(customer._id, numberOfServices, category, technicianId, joiningDate);
 
         customer.services = serviceIds;
         await customer.save();

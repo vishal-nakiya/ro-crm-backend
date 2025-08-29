@@ -28,8 +28,8 @@ const helperObj = {
             message: "An unexpected error occurred. Please try again in a moment.",
         });
     },
-    generateServices: async (customerId, count, category, technicianId) => {
-        const now = new Date();
+    generateServices: async (customerId, count, category, technicianId, joiningDate) => {
+        const baseDate = joiningDate ? new Date(joiningDate) : new Date();
         const serviceList = [];
 
         // Calculate number of services: 12/count (minimum 1 service)
@@ -39,8 +39,8 @@ const helperObj = {
         const intervalMonths = 12 / numberOfServices;
 
         for (let i = 0; i < numberOfServices; i++) {
-            const scheduled = new Date(now);
-            scheduled.setMonth(now.getMonth() + (i * intervalMonths));
+            const scheduled = new Date(baseDate);
+            scheduled.setMonth(baseDate.getMonth() + (i * intervalMonths));
 
             serviceList.push({
                 customerId,
