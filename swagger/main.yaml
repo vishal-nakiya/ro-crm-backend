@@ -24,18 +24,54 @@ components:
       properties:
         _id:
           type: string
-        name:
+        fullName:
           type: string
-        email:
+          description: Customer's full name
+        contactNumber:
           type: string
-          format: email
-        phone:
-          type: string
+          description: Customer's contact number
         address:
           type: string
+          description: Customer's address
+        area:
+          type: string
+          description: Customer's area/location
+        joiningDate:
+          type: string
+          format: date
+          description: Date when customer joined
+        tds:
+          type: number
+          description: TDS value
+        roModel:
+          type: string
+          description: RO model
+        category:
+          type: string
+          enum: [AMC, NEW, PAID]
+          description: Customer category
+        numberOfServices:
+          type: number
+          description: Number of services for the customer
+        serviceGenerationType:
+          type: string
+          enum: [AUTOMATIC, MANUAL]
+          description: Type of service generation
+        remark:
+          type: string
+          description: Additional remarks
         status:
           type: string
-          enum: [active, inactive]
+          enum: [ACTIVE, OFFLINE]
+          description: Customer status
+        technicianId:
+          type: string
+          description: ID of assigned technician
+        services:
+          type: array
+          items:
+            type: string
+          description: Array of service IDs
         createdAt:
           type: string
           format: date-time

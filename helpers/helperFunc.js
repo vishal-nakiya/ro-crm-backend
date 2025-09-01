@@ -28,17 +28,17 @@ const helperObj = {
             message: "An unexpected error occurred. Please try again in a moment.",
         });
     },
-    generateServices: async (customerId, count, category, technicianId, joiningDate) => {
+    generateServices: async (customerId, count, category, technicianId, joiningDate, numberOfServices) => {
         const baseDate = joiningDate ? new Date(joiningDate) : new Date();
         const serviceList = [];
 
-        // Calculate number of services: 12/count (minimum 1 service)
-        const numberOfServices = Math.max(1, Math.floor(12 / count));
+        // If numberOfServices is provided, use it; otherwise calculate based on count
+        const servicesToCreate = numberOfServices || Math.max(1, Math.floor(12 / count));
 
-        // Calculate interval between services in months
-        const intervalMonths = 12 / numberOfServices;
+        // Calculate interval between services in months (spread over 12 months)
+        const intervalMonths = 12 / servicesToCreate;
 
-        for (let i = 0; i < numberOfServices; i++) {
+        for (let i = 0; i < servicesToCreate; i++) {
             const scheduled = new Date(baseDate);
             scheduled.setMonth(baseDate.getMonth() + (i * intervalMonths));
 
@@ -47,6 +47,25 @@ const helperObj = {
                 serviceNumber: i + 1,
                 category,
                 scheduledDate: scheduled,
+                technicianId,
+            });
+        }
+
+        const inserted = await Service.insertMany(serviceList);
+        return inserted.map(s => s._id);
+    },
+    generateManualServices: async (customerId, serviceDates, category, technicianId) => {
+        const serviceList = [];
+
+        // Sort dates to ensure proper service numbering
+        const sortedDates = serviceDates.sort((a, b) => new Date(a) - new Date(b));
+
+        for (let i = 0; i < sortedDates.length; i++) {
+            serviceList.push({
+                customerId,
+                serviceNumber: i + 1,
+                category,
+                scheduledDate: new Date(sortedDates[i]),
                 technicianId,
             });
         }

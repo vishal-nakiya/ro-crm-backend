@@ -1,7 +1,7 @@
 require("dotenv").config();
 const logError = require("../../logger/log");
 const { validationResult } = require("express-validator");
-const { sendSuccessResponse, sendErrorResponse, handleServerError, generateServices } = require("../../helpers/helperFunc");
+const { sendSuccessResponse, sendErrorResponse, handleServerError, generateServices, generateManualServices } = require("../../helpers/helperFunc");
 const Customer = require("../../Models/Customer"); // ✅ import the correct model
 
 const customersController = () => {
@@ -19,7 +19,9 @@ const customersController = () => {
           category,
           numberOfServices,
           remark,
-          status
+          status,
+          serviceGenerationType,
+          serviceDates
         } = req.body;
 
         const technicianId = req.user._id;
@@ -33,6 +35,30 @@ const customersController = () => {
           return sendErrorResponse(400, res, "Invalid status. Must be one of: " + validStatuses.join(', '));
         }
 
+        // Validate serviceGenerationType
+        const validGenerationTypes = ['AUTOMATIC', 'MANUAL'];
+        if (!serviceGenerationType) {
+          return sendErrorResponse(400, res, "Service generation type is required");
+        }
+        if (!validGenerationTypes.includes(serviceGenerationType)) {
+          return sendErrorResponse(400, res, "Invalid service generation type. Must be one of: " + validGenerationTypes.join(', '));
+        }
+
+        // Validate serviceDates for manual generation
+        if (serviceGenerationType === 'MANUAL') {
+          if (!serviceDates || !Array.isArray(serviceDates) || serviceDates.length === 0) {
+            return sendErrorResponse(400, res, "Service dates array is required for manual service generation");
+          }
+
+          // Validate that all dates are valid
+          for (let i = 0; i < serviceDates.length; i++) {
+            const date = new Date(serviceDates[i]);
+            if (isNaN(date.getTime())) {
+              return sendErrorResponse(400, res, `Invalid date at index ${i}: ${serviceDates[i]}`);
+            }
+          }
+        }
+
         const customer = await Customer.create({
           fullName,
           contactNumber,
@@ -42,13 +68,20 @@ const customersController = () => {
           tds,
           roModel,
           category,
-          numberOfServices,
+          numberOfServices: serviceGenerationType === 'MANUAL' ? serviceDates.length : numberOfServices,
           remark,
           status,
+          serviceGenerationType,
           technicianId
         });
 
-        const serviceIds = await generateServices(customer._id, numberOfServices, category, technicianId, joiningDate);
+        let serviceIds;
+
+        if (serviceGenerationType === 'AUTOMATIC') {
+          serviceIds = await generateServices(customer._id, numberOfServices, category, technicianId, joiningDate);
+        } else if (serviceGenerationType === 'MANUAL') {
+          serviceIds = await generateManualServices(customer._id, serviceDates, category, technicianId);
+        }
 
         customer.services = serviceIds;
         await customer.save();

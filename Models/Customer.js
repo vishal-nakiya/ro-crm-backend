@@ -23,6 +23,11 @@ const customerSchema = new mongoose.Schema({
         default: 'NEW'
     },
     numberOfServices: { type: Number, default: 0 },
+    serviceGenerationType: {
+        type: String,
+        enum: ['AUTOMATIC', 'MANUAL'],
+        default: 'AUTOMATIC'
+    },
     remark: { type: String },
     status: {
         type: String,
