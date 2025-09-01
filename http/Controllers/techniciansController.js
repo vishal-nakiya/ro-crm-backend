@@ -446,6 +446,73 @@ const techniciansController = () => {
         return handleServerError(res);
       }
     },
+    techniciansUpdate: async (req, res) => {
+      try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return sendErrorResponse(422, res, errors.errors[0].msg);
+        }
+
+        const { id } = req.params;
+        const {
+          fullName,
+          contactNumber,
+          companyName,
+          address
+        } = req.body;
+
+        // Check if technician exists
+        const existingTechnician = await Technician.findOne({
+          _id: id,
+          deletedAt: null
+        });
+
+        if (!existingTechnician) {
+          return sendErrorResponse(404, res, "Technician not found.");
+        }
+
+        // Check if contactNumber is being updated and if it already exists for another technician
+        if (contactNumber && contactNumber !== existingTechnician.contactNumber) {
+          const duplicateContact = await Technician.findOne({
+            contactNumber,
+            _id: { $ne: id },
+            deletedAt: null
+          });
+
+          if (duplicateContact) {
+            return sendErrorResponse(409, res, "Contact number already exists for another technician.");
+          }
+        }
+
+        // Build update object with only provided fields
+        const updateData = {};
+        if (fullName) updateData.fullName = fullName.trim();
+        if (contactNumber) updateData.contactNumber = contactNumber;
+        if (companyName) updateData.companyName = companyName.trim();
+        if (address) updateData.address = address.trim();
+
+        // Update technician
+        const updatedTechnician = await Technician.findByIdAndUpdate(
+          id,
+          updateData,
+          {
+            new: true,
+            runValidators: true
+          }
+        ).select('-accountPassword -otp -authToken -refreshToken -firebase_uid -fcmToken');
+
+        sendSuccessResponse(
+          200,
+          res,
+          "Technician updated successfully.",
+          updatedTechnician
+        );
+      } catch (error) {
+        console.error(error);
+        logError(error, req);
+        return handleServerError(res);
+      }
+    },
   };
 };
 

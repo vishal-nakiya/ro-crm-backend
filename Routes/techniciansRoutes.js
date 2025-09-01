@@ -115,5 +115,7 @@ Router.post("/verify-otp", [
 // Get technicians list with pagination and search
 Router.get("/list", techniciansController().techniciansList);
 
+// Update technician route
+Router.put("/update/:id", techniciansController().techniciansUpdate);
 
 module.exports = Router;
